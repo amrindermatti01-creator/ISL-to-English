@@ -1,0 +1,29 @@
+# Virtual Environments
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Data & Datasets
+data/raw/
+data/processed/
+data/splits/*.npy
+data/splits/*.npz
+
+# Model weights & Large artifacts
+artifacts/*.keras
+artifacts/*.h5
+artifacts/*.tflite
+
+# OS & IDE
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Reports images (optional, commit if small)
+# Keep csv and json reports
