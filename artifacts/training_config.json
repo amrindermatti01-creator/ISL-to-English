@@ -1,0 +1,20 @@
+{
+  "architecture": "compact",
+  "input_shape": [
+    64,
+    64,
+    1
+  ],
+  "num_classes": 35,
+  "batch_size": 64,
+  "epochs_run": 5,
+  "elapsed_seconds": 1353.09,
+  "elapsed_minutes": 22.55,
+  "final_train_acc": 0.9993,
+  "final_val_acc": 0.9998,
+  "best_val_acc": 1.0,
+  "best_val_loss": 0.0002,
+  "best_model_path": "artifacts\\best_model.keras",
+  "history_csv": "reports\\training_history.csv",
+  "timestamp": "2026-10-24 13:43:38"
+}
