@@ -136,14 +136,14 @@ class ISLDesktopApp:
         )
         title_lbl.pack(side=tk.LEFT, padx=20, pady=12)
 
-        subtitle_lbl = tk.Label(
+        self.subtitle_lbl = tk.Label(
             header,
-            text="35 Classes (Digits 1–9, Letters A–Z) | MediaPipe Vision + CNN",
+            text="26 Alphabet Classes (A–Z) | MediaPipe Vision + CNN",
             font=("Segoe UI", 10),
             fg="#94a3b8",
             bg="#1a202c"
         )
-        subtitle_lbl.pack(side=tk.LEFT, padx=5, pady=14)
+        self.subtitle_lbl.pack(side=tk.LEFT, padx=5, pady=14)
 
         # Right side status indicator
         self.engine_status_lbl = tk.Label(
@@ -412,6 +412,10 @@ class ISLDesktopApp:
 
     def on_engine_ready(self):
         desc = getattr(self, "model_description", "Neural Network Ready")
+        num_classes = len(self.engine.classes) if self.engine else 26
+        first_cls = self.engine.classes[0] if self.engine else "A"
+        last_cls = self.engine.classes[-1] if self.engine else "Z"
+        self.subtitle_lbl.configure(text=f"{num_classes} Classes ({first_cls}–{last_cls}) | MediaPipe Vision + CNN")
         self.engine_status_lbl.configure(text=f"● {desc}", fg="#10b981")
         self.status_msg_lbl.configure(text=f"Ready: {desc}. Click [Start Webcam] to begin.")
 

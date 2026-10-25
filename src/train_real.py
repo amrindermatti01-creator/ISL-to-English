@@ -84,7 +84,11 @@ def build_real_compact_cnn(input_shape=(64, 64, 1), num_classes=26, learning_rat
 
 def plot_real_training_curves(history_csv_path, output_png_path):
     """Plots training vs validation accuracy and loss curves."""
-    df = pd.read_csv(history_csv_path)
+    try:
+        df = pd.read_csv(history_csv_path, on_bad_lines="skip")
+    except Exception as e:
+        print(f"[WARNING] Could not read CSV directly ({e}), retrying without bad lines...")
+        df = pd.read_csv(history_csv_path)
     epochs = range(1, len(df) + 1)
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
