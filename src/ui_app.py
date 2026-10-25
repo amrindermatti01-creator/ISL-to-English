@@ -420,8 +420,9 @@ class ISLDesktopApp:
             self.status_msg_lbl.configure(text="Camera connection failed.")
             return
 
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+        # Request 16:9 widescreen HD (1280x720) for wider field of view and extra signing room
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
         self.is_running = True
         self.btn_toggle_cam.configure(text="■ Stop Webcam", style="Danger.TButton")
@@ -618,21 +619,109 @@ class ISLDesktopApp:
             self.root.clipboard_append(text)
             self.status_msg_lbl.configure(text=f"Copied '{text}' to clipboard!")
 
-    def take_snapshot(self):
-        if not hasattr(self, "last_annotated") or self.last_annotated is None:
-            messagebox.showinfo("Snapshot", "No active frame to capture. Start the webcam first.")
-            return
+    def capture_full_window(self):
+        """
+        Captures a high-resolution screenshot of the entire application window,
+        including webcam canvas, fingerspelled text, CNN PiP preview, prediction badges,
+        and stream controls.
+        """
+        self.root.update_idletasks()
 
+        if os.name == "nt":
+            try:
+                import ctypes
+                from ctypes import wintypes
+                user32 = ctypes.windll.user32
+                gdi32 = ctypes.windll.gdi32
+
+                hwnd = self.root.winfo_id()
+                parent = user32.GetParent(hwnd)
+                target_hwnd = parent if parent else hwnd
+
+                rect = wintypes.RECT()
+                user32.GetWindowRect(target_hwnd, ctypes.byref(rect))
+                w = max(1, rect.right - rect.left)
+                h = max(1, rect.bottom - rect.top)
+
+                hdc_win = user32.GetWindowDC(target_hwnd)
+                hdc_mem = gdi32.CreateCompatibleDC(hdc_win)
+                hbm = gdi32.CreateCompatibleBitmap(hdc_win, w, h)
+                gdi32.SelectObject(hdc_mem, hbm)
+
+                # PW_RENDERFULLCONTENT = 2, fallback to 0
+                res = user32.PrintWindow(target_hwnd, hdc_mem, 2)
+                if not res:
+                    res = user32.PrintWindow(target_hwnd, hdc_mem, 0)
+
+                class BITMAPINFOHEADER(ctypes.Structure):
+                    _fields_ = [
+                        ('biSize', wintypes.DWORD),
+                        ('biWidth', wintypes.LONG),
+                        ('biHeight', wintypes.LONG),
+                        ('biPlanes', wintypes.WORD),
+                        ('biBitCount', wintypes.WORD),
+                        ('biCompression', wintypes.DWORD),
+                        ('biSizeImage', wintypes.DWORD),
+                        ('biXPelsPerMeter', wintypes.LONG),
+                        ('biYPelsPerMeter', wintypes.LONG),
+                        ('biClrUsed', wintypes.DWORD),
+                        ('biClrImportant', wintypes.DWORD)
+                    ]
+
+                bmi = BITMAPINFOHEADER()
+                bmi.biSize = ctypes.sizeof(BITMAPINFOHEADER)
+                bmi.biWidth = w
+                bmi.biHeight = -h  # top-down DIB
+                bmi.biPlanes = 1
+                bmi.biBitCount = 32
+                bmi.biCompression = 0
+
+                buffer = ctypes.create_string_buffer(w * h * 4)
+                gdi32.GetDIBits(hdc_mem, hbm, 0, h, buffer, ctypes.byref(bmi), 0)
+
+                img = Image.frombuffer('RGBA', (w, h), buffer, 'raw', 'BGRA', 0, 1).convert('RGB')
+
+                gdi32.DeleteObject(hbm)
+                gdi32.DeleteDC(hdc_mem)
+                user32.ReleaseDC(target_hwnd, hdc_win)
+                return img
+            except Exception as e:
+                print(f"[UI] PrintWindow capture failed: {e}")
+
+        # Fallback to PIL ImageGrab if available
+        try:
+            from PIL import ImageGrab
+            x = self.root.winfo_rootx()
+            y = self.root.winfo_rooty()
+            w = self.root.winfo_width()
+            h = self.root.winfo_height()
+            return ImageGrab.grab(bbox=(x, y, x + w, y + h))
+        except Exception:
+            return None
+
+    def take_snapshot(self):
         snap_id = int(time.time())
-        snap_path = self.snapshots_dir / f"gui_snapshot_{snap_id}.png"
-        cv2.imwrite(str(snap_path), self.last_annotated)
+        window_img = self.capture_full_window()
+
+        if window_img is not None:
+            snap_path = self.snapshots_dir / f"gui_snapshot_{snap_id}.png"
+            window_img.save(str(snap_path))
+        elif hasattr(self, "last_annotated") and self.last_annotated is not None:
+            snap_path = self.snapshots_dir / f"gui_snapshot_{snap_id}.png"
+            cv2.imwrite(str(snap_path), self.last_annotated)
+        else:
+            self.status_msg_lbl.configure(text="No active frame to capture.", fg="#fbbf24")
+            return
 
         if hasattr(self, "last_prep") and self.last_prep is not None:
             canny_path = self.snapshots_dir / f"gui_canny_{snap_id}.png"
             cv2.imwrite(str(canny_path), self.last_prep)
 
-        self.status_msg_lbl.configure(text=f"Saved snapshot to {snap_path.name}")
-        messagebox.showinfo("Snapshot Saved", f"Captured snapshot successfully:\n{snap_path}")
+        self.status_msg_lbl.configure(text=f"Screenshot Captured: {snap_path.name}", fg="#38bdf8")
+        self.root.after(3000, lambda: self.status_msg_lbl.configure(
+            text="Webcam running. Present ISL signs in view." if self.is_running else "Ready.",
+            fg="#94a3b8"
+        ))
 
     def on_close(self):
         self.is_running = False

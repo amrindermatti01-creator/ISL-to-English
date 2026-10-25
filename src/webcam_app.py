@@ -372,9 +372,9 @@ def main():
         engine.release()
         return
 
-    # Set camera resolution
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    # Set camera resolution (16:9 widescreen for wide angle field of view)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
     snapshots_dir = Path("reports/snapshots")
     snapshots_dir.mkdir(parents=True, exist_ok=True)

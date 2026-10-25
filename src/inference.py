@@ -96,46 +96,64 @@ class ISLInferenceEngine:
 
     def extract_hand_roi(self, frame_bgr, landmarks_list, margin_scale=None):
         """
-        Calculates bounding box enclosing all detected hands (single or dual),
-        adds a margin (default tightened to 1.15x), and crops ROI.
+        Calculates a tight bounding box around detected hands,
+        masks out background/face clutter using a landmark convex hull,
+        and pads to square with clean black borders (letterboxing).
+        Prevents sideways expansion that captures face, hair, and wall plates.
         """
-        if margin_scale is None:
-            margin_scale = self.margin_scale
         h, w = frame_bgr.shape[:2]
-        all_xs = []
-        all_ys = []
+        all_pts = []
 
         for hand_landmarks in landmarks_list:
             for lm in hand_landmarks.landmark:
-                all_xs.append(int(lm.x * w))
-                all_ys.append(int(lm.y * h))
+                all_pts.append([int(lm.x * w), int(lm.y * h)])
 
-        if not all_xs or not all_ys:
+        if not all_pts:
             return None, None
 
-        x_min, x_max = min(all_xs), max(all_xs)
-        y_min, y_max = min(all_ys), max(all_ys)
+        pts_arr = np.array(all_pts, dtype=np.int32)
+        x_min, y_min = np.min(pts_arr, axis=0)
+        x_max, y_max = np.max(pts_arr, axis=0)
 
         box_w = x_max - x_min
         box_h = y_max - y_min
-        center_x = x_min + box_w // 2
-        center_y = y_min + box_h // 2
 
-        # Make square crop based on maximum dimension
-        side = int(max(box_w, box_h) * margin_scale)
-        half_side = side // 2
+        # Modest proportional padding (tight fit to hand, ~10% margin)
+        pad_x = max(12, int(box_w * 0.10))
+        pad_y = max(15, int(box_h * 0.10))
 
-        x1 = max(0, center_x - half_side)
-        y1 = max(0, center_y - half_side)
-        x2 = min(w, center_x + half_side)
-        y2 = min(h, center_y + half_side)
+        x1 = max(0, x_min - pad_x)
+        y1 = max(0, y_min - pad_y)
+        x2 = min(w, x_max + pad_x)
+        y2 = min(h, y_max + pad_y)
 
         if (x2 - x1) < 20 or (y2 - y1) < 20:
             return None, None
 
-        roi = frame_bgr[y1:y2, x1:x2]
+        # 1. Crop tight hand ROI
+        roi = frame_bgr[y1:y2, x1:x2].copy()
+        rh, rw = roi.shape[:2]
+
+        # 2. Hand-only convex hull mask to remove any hair/face/wall clutter within the crop
+        rel_pts = pts_arr - [x1, y1]
+        hull = cv2.convexHull(rel_pts)
+        mask = np.zeros((rh, rw), dtype=np.uint8)
+        cv2.fillConvexPoly(mask, hull, 255)
+
+        # Dilate slightly so finger boundaries and flesh are preserved
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (15, 15))
+        mask = cv2.dilate(mask, kernel, iterations=1)
+        masked_roi = cv2.bitwise_and(roi, roi, mask=mask)
+
+        # 3. Letterbox to square with black background (no background noise introduced)
+        max_dim = max(rh, rw)
+        square_roi = np.zeros((max_dim, max_dim, 3), dtype=np.uint8)
+        off_x = (max_dim - rw) // 2
+        off_y = (max_dim - rh) // 2
+        square_roi[off_y:off_y + rh, off_x:off_x + rw] = masked_roi
+
         bbox = (x1, y1, x2, y2)
-        return roi, bbox
+        return square_roi, bbox
 
     def process_frame(self, frame_bgr):
         """
