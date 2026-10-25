@@ -27,7 +27,8 @@ def preprocess_image(
     use_canny=True,
     canny_low=50,
     canny_high=150,
-    normalize=True
+    normalize=True,
+    preserve_aspect_ratio=True
 ):
     """
     Unified preprocessing function used identically for training, evaluation,
@@ -41,6 +42,8 @@ def preprocess_image(
         canny_low: Lower gradient threshold for Canny.
         canny_high: Upper gradient threshold for Canny.
         normalize: If True, scales pixel values to range [0.0, 1.0].
+        preserve_aspect_ratio: If True, scales rectangular inputs proportionally
+                               and letterboxes/pads onto target_size canvas with 0.
 
     Returns:
         np.ndarray of shape (target_size[1], target_size[0], 1) with dtype float32 (if normalized) or uint8.
@@ -80,8 +83,25 @@ def preprocess_image(
     else:
         processed = blurred
 
-    # 5. Resize to target dimensions
-    if (processed.shape[1], processed.shape[0]) != target_size:
+    # 5. Resize to target dimensions (with aspect-ratio preservation option)
+    if preserve_aspect_ratio:
+        h_p, w_p = processed.shape[:2]
+        tw, th = target_size
+        scale = min(tw / w_p, th / h_p)
+        new_w = max(1, int(round(w_p * scale)))
+        new_h = max(1, int(round(h_p * scale)))
+
+        resized = cv2.resize(processed, (new_w, new_h), interpolation=cv2.INTER_AREA)
+        # Re-binarize after interpolation to ensure edges remain crisp (prevents dilution bug)
+        if use_canny or threshold_value is not None:
+            _, resized = cv2.threshold(resized, 20, 255, cv2.THRESH_BINARY)
+
+        canvas = np.zeros((th, tw), dtype=resized.dtype)
+        ox = (tw - new_w) // 2
+        oy = (th - new_h) // 2
+        canvas[oy:oy + new_h, ox:ox + new_w] = resized
+        processed = canvas
+    elif (processed.shape[1], processed.shape[0]) != target_size:
         processed = cv2.resize(processed, target_size, interpolation=cv2.INTER_AREA)
         # Re-binarize after interpolation to ensure edges remain crisp (prevents dilution bug)
         if use_canny or threshold_value is not None:
@@ -154,3 +174,80 @@ if __name__ == "__main__":
         normalize=p_cfg["normalize"]
     )
     print(f"[Stage 2] Preprocessing unit check passed! Output shape: {out.shape}, dtype: {out.dtype}, range: [{out.min()}, {out.max()}]")
+
+
+# ============================================================================
+# MediaPipe 126D Landmark Normalization & Validation (Dual-Hand ISL Canonical)
+# ============================================================================
+
+def normalize_landmarks_126d(landmarks, handedness="Right"):
+    """
+    Normalizes hand landmarks to a canonical 126D coordinate vector.
+    - Preserves ISL dual-handed alphabet requirements:
+        Left hand occupies indices [0:63]
+        Right hand occupies indices [63:126]
+    - Translates landmarks so wrist (landmark 0) is at origin (0, 0, 0).
+    - Scales coordinates by Euclidean distance between wrist and middle MCP (landmark 9).
+    - Missing hand is padded with zeros.
+
+    Args:
+        landmarks: List of 21 landmark objects/dicts or (21, 3) ndarray.
+        handedness: 'Left' or 'Right' (or 'left'/'right').
+
+    Returns:
+        np.ndarray of shape (126,) with dtype float32.
+    """
+    if isinstance(landmarks, np.ndarray):
+        pts = landmarks.astype(np.float32)
+    else:
+        pts = []
+        for lm in landmarks:
+            if hasattr(lm, 'x'):
+                pts.append([lm.x, lm.y, lm.z])
+            elif isinstance(lm, dict):
+                pts.append([lm['x'], lm['y'], lm['z']])
+            else:
+                pts.append(list(lm)[:3])
+        pts = np.array(pts, dtype=np.float32)
+
+    if pts.shape != (21, 3):
+        raise ValueError(f"Expected 21 landmarks with (x, y, z), got shape {pts.shape}")
+
+    wrist = pts[0]
+    mcp = pts[9]
+    scale = float(np.linalg.norm(mcp - wrist)) + 1e-6
+    pts_norm = (pts - wrist) / scale
+
+    vec = np.zeros(126, dtype=np.float32)
+    h_lower = str(handedness).lower()
+    if "left" in h_lower:
+        vec[0:63] = pts_norm.flatten()
+    else:
+        vec[63:126] = pts_norm.flatten()
+
+    return vec
+
+
+def validate_landmarks_vector(vec):
+    """
+    Validates a 126D landmark feature vector prior to model inference.
+    Rejects:
+    - Incorrect type or shape != (126,)
+    - NaN or Inf values
+    - Completely empty vectors (all zeros, indicating no hand detected)
+
+    Returns:
+        tuple (is_valid: bool, error_message: str)
+    """
+    if not isinstance(vec, np.ndarray):
+        return False, "Input must be a numpy ndarray"
+    if vec.shape != (126,):
+        return False, f"Expected shape (126,), got {vec.shape}"
+    if np.isnan(vec).any():
+        return False, "Vector contains NaN values"
+    if np.isinf(vec).any():
+        return False, "Vector contains Inf values"
+    if np.all(vec == 0.0):
+        return False, "Vector is empty (all zeros - no hand detected)"
+    return True, "Valid"
+

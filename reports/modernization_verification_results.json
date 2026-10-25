@@ -1,0 +1,38 @@
+{
+  "test1_checkpoints": {
+    "landmark_mlp_size_mb": 0.94,
+    "legacy_cnn_size_mb": 17.19,
+    "status": "PASSED"
+  },
+  "test2_latency": {
+    "landmark_mlp_ms": 22.02,
+    "legacy_cnn_ms": 59.99,
+    "status": "PASSED"
+  },
+  "test3_text_builder": {
+    "raw_input": [
+      "H",
+      "E",
+      "L",
+      "L",
+      "O"
+    ],
+    "reconstructed_word": "HELLO",
+    "status": "PASSED"
+  },
+  "test4_translation": {
+    "english": "HELLO",
+    "hindi": "\u0928\u092e\u0938\u094d\u0924\u0947",
+    "punjabi": "\u0a38\u0a24\u0a3f \u0a38\u0a4d\u0a30\u0a40 \u0a05\u0a15\u0a3e\u0a32",
+    "tamil": "\u0bb5\u0ba3\u0b95\u0bcd\u0b95\u0bae\u0bcd",
+    "status": "PASSED"
+  },
+  "test5_unicode_render": {
+    "drawn_pixels": 21345,
+    "status": "PASSED"
+  },
+  "test6_tts_async": {
+    "dispatch_ms": 44.24,
+    "status": "PASSED"
+  }
+}

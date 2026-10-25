@@ -1,0 +1,2540 @@
+[
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1198.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\B\\178.jpg",
+    "class_name": "B",
+    "class_idx": 10,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\65.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\506.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\361.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\228 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\30.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\013.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\173 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\632.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\115 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1119.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1039.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\682.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1123.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\17.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\B\\193.jpg",
+    "class_name": "B",
+    "class_idx": 10,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\118 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\118 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\144 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1196.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\054.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1064.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\097.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1193.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\114 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\389.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1195.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\806.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\171.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\850.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1164.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\172 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\113.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\634.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\399.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\257.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\920.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\88.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\55.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\891.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\408.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\191 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\008.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\120 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\379.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1062.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\289.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\70.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\189 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\B\\203.jpg",
+    "class_name": "B",
+    "class_idx": 10,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\82.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\857.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\386.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\214 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\526.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\200 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\119 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\194 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\555.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\764.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\74.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\208 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\762.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\680.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\020.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\009.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\90.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\984.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\U\\206.jpg",
+    "class_name": "U",
+    "class_idx": 29,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\115.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\150 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\173.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1185.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\S\\463.jpg",
+    "class_name": "S",
+    "class_idx": 27,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\6.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\933.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\V\\015.jpg",
+    "class_name": "V",
+    "class_idx": 30,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\175 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\85.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\136 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\376.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\23.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\781.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\516.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\703.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\614.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1151.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1139.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\383.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\394.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\648.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\618.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\739.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\129.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\798.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\114 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\268.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\129 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\255.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\081.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\68.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\104.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\335.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\611.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\67.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\V\\009.jpg",
+    "class_name": "V",
+    "class_idx": 30,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1086.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\971.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\028.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\95.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\062.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\28.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\32.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\57.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\936.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\54.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1042.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1120.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\811.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\820.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1137.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\358.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\501.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\156 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\559.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\629.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\805.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\689.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1038.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\174 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\27.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\374.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\116 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\105.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\55.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\410.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\148 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\012.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\138 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\651.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\763.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\20.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\748.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1167.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\122 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\63.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\216 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\31.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1133.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\100.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\159 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\769.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\782.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\667.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\205 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\120.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\88.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\055.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1136.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\929.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\186 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\983.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\S\\368.jpg",
+    "class_name": "S",
+    "class_idx": 27,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\127.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\907.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\477.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\449.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\780.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\753.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\82.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\57.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\V\\013.jpg",
+    "class_name": "V",
+    "class_idx": 30,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\40.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\010.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\125.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\705.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\397.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\21.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\790.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\111 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1153.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1040.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\752.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\25.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\770.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\037.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\6.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\633.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\474.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\974.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\96.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\63.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\354.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\52.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\227 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\64.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\48.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\S\\445.jpg",
+    "class_name": "S",
+    "class_idx": 27,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\640.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\215 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\404.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\499.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\515.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\366.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\259.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\219.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1158.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\175.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\170 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\356.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\S\\433.jpg",
+    "class_name": "S",
+    "class_idx": 27,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\454.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1110.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\150 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\829.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1051.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\835.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\S\\306.jpg",
+    "class_name": "S",
+    "class_idx": 27,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\S\\466.jpg",
+    "class_name": "S",
+    "class_idx": 27,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1032.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\156 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\631.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\053.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\19.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\V\\014.jpg",
+    "class_name": "V",
+    "class_idx": 30,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\040.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\069.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\056.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\384.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\843.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1162.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\011.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\446.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\116.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\704.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1058.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\177 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\92.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1030.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\366.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\151 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1054.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\854.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\16.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\224 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1126.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\375.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\81.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\419.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\525.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\322.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\828.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\137 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\022.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\185 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\683.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\134.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\698.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\210 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\94.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1053.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\672.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\112.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\S\\428.jpg",
+    "class_name": "S",
+    "class_idx": 27,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1183.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1127.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\67.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\120 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1192.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\119.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\183 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\924.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\700.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\124.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\S\\526.jpg",
+    "class_name": "S",
+    "class_idx": 27,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\943.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\58.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\630.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\S\\312.jpg",
+    "class_name": "S",
+    "class_idx": 27,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1181.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\696.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\93.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\199 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\S\\467.jpg",
+    "class_name": "S",
+    "class_idx": 27,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\33.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\217 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\969.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1148.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\23.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\911.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\8.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\231 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\62.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\659.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\S\\95.jpg",
+    "class_name": "S",
+    "class_idx": 27,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\932.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\155 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\227 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\S\\474.jpg",
+    "class_name": "S",
+    "class_idx": 27,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1044.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1176.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\257.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1161.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\147 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1047.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\405.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\824.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\199 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1152.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\169 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\266.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\B\\202.jpg",
+    "class_name": "B",
+    "class_idx": 10,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\390.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\388.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\161 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1080.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1129.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\141 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\341.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\139 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\332.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\B\\213.jpg",
+    "class_name": "B",
+    "class_idx": 10,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\023.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\254.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\34.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\140 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\849.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\151 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\219 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\451.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\18.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\204 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\G\\287.jpg",
+    "class_name": "G",
+    "class_idx": 15,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\128.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\612.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\159 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1157.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1107.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\220 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\842.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1067.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\182 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\328.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\24.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\79.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\12.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\893.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1121.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\702.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\59.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\393.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\74.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\370.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\61.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\458.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\176 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\023.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1178.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\114.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\665.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\418.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\381.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\225 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\154 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\106.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\021.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\B\\188.jpg",
+    "class_name": "B",
+    "class_idx": 10,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\193 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\392.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1150.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\060.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\79.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1191.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\221 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\448.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\202 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\841.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\838.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\509.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\S\\465.jpg",
+    "class_name": "S",
+    "class_idx": 27,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\018.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1197.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\128 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\051.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\390.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\S\\124.jpg",
+    "class_name": "S",
+    "class_idx": 27,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\208 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\038.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\130.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\205 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\S\\349.jpg",
+    "class_name": "S",
+    "class_idx": 27,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\26.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\050.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\76.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\692.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\839.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\395.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\502.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\185 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1155.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\43.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\P\\269.jpg",
+    "class_name": "P",
+    "class_idx": 24,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\110.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\176 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\162 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\C\\133 copy.jpg",
+    "class_name": "C",
+    "class_idx": 11,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1172.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\270.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\1188.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\15.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\107.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\450.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\518.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\2.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\934.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\810.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\804.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\97.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\O\\153 copy.jpg",
+    "class_name": "O",
+    "class_idx": 23,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\B\\194.jpg",
+    "class_name": "B",
+    "class_idx": 10,
+    "reason": "no_hands_detected"
+  },
+  {
+    "path": "C:\\Users\\hp\\Indian\\Q\\535.jpg",
+    "class_name": "Q",
+    "class_idx": 25,
+    "reason": "no_hands_detected"
+  }
+]

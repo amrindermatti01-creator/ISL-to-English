@@ -1,6 +1,6 @@
 # Indian Sign Language (ISL) Webcam Inference Benchmark & Validation Report
 
-- **Date**: 2026-10-24 14:42:44
+- **Date**: 2026-10-24 15:50:42
 - **Model Checkpoint**: `artifacts\best_model.keras`
 - **Class Count**: 35 classes (`1`-`9`, `A`-`Z`)
 - **Confidence Threshold**: `0.7`
@@ -11,16 +11,16 @@
 
 ## 1. Latency & Throughput Performance
 
-Tested over **30 sequential full-pipeline frames** (MediaPipe detection $\to$ Dynamic ROI crop $\to$ 64×64 Canny edge normalization $\to$ CNN forward pass $\to$ Temporal vote $\to$ HUD overlay).
+Tested over **50 sequential full-pipeline frames** (MediaPipe detection $\to$ Dynamic ROI crop $\to$ 64×64 Canny edge normalization $\to$ CNN forward pass $\to$ Temporal vote $\to$ HUD overlay).
 
 | Metric | Measured Value | Standard Target | Status |
 | :--- | :--- | :--- | :--- |
-| **Average Throughput (FPS)** | **34.5 FPS** | $\ge 20$ FPS | **PASSED** |
-| **Mean End-to-End Latency** | **27.9 ms** | $\le 50$ ms | **PASSED** |
-| **Median (P50) Latency** | **25.8 ms** | $\le 45$ ms | **PASSED** |
-| **95th Percentile (P95) Latency** | **35.2 ms** | $\le 65$ ms | **PASSED** |
-| **Min Latency** | **23.0 ms** | - | - |
-| **Max Latency** | **62.8 ms** | - | - |
+| **Average Throughput (FPS)** | **26.2 FPS** | $\ge 20$ FPS | **PASSED** |
+| **Mean End-to-End Latency** | **36.9 ms** | $\le 50$ ms | **PASSED** |
+| **Median (P50) Latency** | **34.6 ms** | $\le 45$ ms | **PASSED** |
+| **95th Percentile (P95) Latency** | **48.3 ms** | $\le 65$ ms | **PASSED** |
+| **Min Latency** | **25.8 ms** | - | - |
+| **Max Latency** | **95.7 ms** | - | - |
 
 ---
 

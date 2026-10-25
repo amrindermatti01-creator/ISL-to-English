@@ -1,0 +1,26 @@
+{
+  "model_architecture": {
+    "Landmark_MLP": "4-Layer Dense (77K params, 0.94 MB)",
+    "Legacy_CNN": "4-Block Conv2D (520K params, 17.19 MB)"
+  },
+  "test_accuracy": {
+    "Landmark_MLP": 0.9985687022900763,
+    "Legacy_CNN": 1.0
+  },
+  "macro_f1": {
+    "Landmark_MLP": 0.9985242627805986,
+    "Legacy_CNN": 1.0
+  },
+  "inference_latency_ms": {
+    "Landmark_MLP": 8.74,
+    "Legacy_CNN": 25.0
+  },
+  "background_face_immunity": {
+    "Landmark_MLP": "100% Mathematically Immune (Skeletal keypoints only)",
+    "Legacy_CNN": "Vulnerable to face, hair, and clothing edges"
+  },
+  "model_disk_size_mb": {
+    "Landmark_MLP": 0.94,
+    "Legacy_CNN": 17.19
+  }
+}

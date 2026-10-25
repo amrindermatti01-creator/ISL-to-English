@@ -36,8 +36,21 @@ inference:
   smoothing_frames: 5
   no_sign_label: "No reliable sign detected"
   camera_index: 0
-  roi_scale_factor: 1.2 # expansion around MediaPipe hand bounding box
+  pad_x_ratio: 0.15      # independent horizontal padding (15%)
+  pad_y_ratio: 0.15      # independent vertical padding (15%)
+  edge_margin: 8         # boundary truncation guard margin (pixels)
+  enable_segmentation: false # optional pixel segmentation (default disabled)
 
 artifacts:
   model_dir: "artifacts"
   reports_dir: "reports"
+
+modernization:
+  active_engine: "landmark_mlp"       # "landmark_mlp" | "cnn_legacy"
+  landmark_model_path: "artifacts/landmark_model.keras"
+  landmark_mapping_path: "artifacts/landmark_class_mapping.json"
+  target_language: "hi"               # Default translation target language ("hi", "pa", "ta", "bn", "en")
+  tts_enabled: false                  # Audio speech toggle
+  confirm_threshold: 1.0              # Seconds to hold sign to register letter
+  space_threshold: 1.2                # Seconds to hold closed fist to trigger SPACE (word boundary)
+  groq_model: "llama-3.1-8b-instant"  # Online LLM model for word reconstruction

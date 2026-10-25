@@ -1,0 +1,101 @@
+{
+  "Test 1: Hand away from face": {
+    "hand_detected": true,
+    "predicted_class": "Uncertain / No reliable sign",
+    "confidence": 0.0,
+    "face_contamination": false,
+    "bbox": [
+      126,
+      204,
+      210,
+      393
+    ],
+    "passed": true
+  },
+  "Test 2: Hand in front of face": {
+    "hand_detected": false,
+    "predicted_class": "Hand not detected",
+    "confidence": 0.0,
+    "bbox": null,
+    "passed": false
+  },
+  "Test 3: Frame boundary truncation guard": {
+    "sub_tests": {
+      "left_edge": {
+        "status": "no_hand",
+        "roi_extracted": false,
+        "predicted_class": "Hand not detected",
+        "safe_guard_held": true
+      },
+      "right_edge": {
+        "status": "no_hand",
+        "roi_extracted": false,
+        "predicted_class": "Hand not detected",
+        "safe_guard_held": true
+      },
+      "top_edge": {
+        "status": "truncated",
+        "roi_extracted": false,
+        "predicted_class": "Hand near edge \u2014 move into view",
+        "safe_guard_held": true
+      },
+      "bottom_edge": {
+        "status": "no_hand",
+        "roi_extracted": false,
+        "predicted_class": "Hand not detected",
+        "safe_guard_held": true
+      }
+    },
+    "passed": true
+  },
+  "Test 4: Face/body without hand": {
+    "roi_extracted": false,
+    "status": "no_hand",
+    "predicted_class": "Hand not detected",
+    "is_reliable": false,
+    "passed": true
+  },
+  "Test 5: Wall-only background": {
+    "roi_extracted": false,
+    "status": "no_hand",
+    "predicted_class": "Hand not detected",
+    "is_reliable": false,
+    "passed": true
+  },
+  "Test 6: Lighting & Distance variations": {
+    "variations": {
+      "bright_lighting": {
+        "status": "no_hand",
+        "class": "Hand not detected",
+        "confidence": 0.0,
+        "is_reliable": false
+      },
+      "dim_lighting": {
+        "status": "ok",
+        "class": "Uncertain / No reliable sign",
+        "confidence": 0.0,
+        "is_reliable": false
+      },
+      "close_distance": {
+        "status": "ok",
+        "class": "Uncertain / No reliable sign",
+        "confidence": 0.0,
+        "is_reliable": false
+      },
+      "far_distance": {
+        "status": "ok",
+        "class": "Uncertain / No reliable sign",
+        "confidence": 0.0,
+        "is_reliable": false
+      }
+    },
+    "passed": true
+  },
+  "Benchmark": {
+    "num_frames": 100,
+    "mean_latency_ms": 97.42,
+    "p50_latency_ms": 94.35,
+    "p95_latency_ms": 121.43,
+    "throughput_fps": 10.3
+  }
+}

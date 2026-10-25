@@ -13,7 +13,9 @@ opencv-python>=4.8.0
 mediapipe>=0.10.9
 tensorflow>=2.15.0,<2.17.0
 
-# Future Phase 2 dependencies (NLP & Speech)
-# spacy>=3.7.0
-# pyttsx3>=2.90
-# SpeechRecognition>=3.10.0
+# Modernization Extensions (NLP, Multilingual Translation & Audio Speech)
+deep-translator>=1.11.4
+gTTS>=2.5.0
+pygame>=2.5.0
+groq>=0.9.0
+symspellpy>=6.7.0
