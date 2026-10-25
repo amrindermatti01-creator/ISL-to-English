@@ -254,7 +254,25 @@ class ISLDesktopApp:
             fg="#94a3b8",
             bg="#222b3a"
         )
-        self.conf_badge_lbl.pack(pady=(0, 8))
+        self.conf_badge_lbl.pack(pady=(0, 2))
+
+        self.hand_mode_lbl = tk.Label(
+            pred_card,
+            text="Mode: No Hands in View",
+            font=("Segoe UI", 8),
+            fg="#38bdf8",
+            bg="#222b3a"
+        )
+        self.hand_mode_lbl.pack(pady=(0, 4))
+
+        self.top3_lbl = tk.Label(
+            pred_card,
+            text="Top 3: —",
+            font=("Consolas", 9, "bold"),
+            fg="#cbd5e1",
+            bg="#222b3a"
+        )
+        self.top3_lbl.pack(pady=(0, 8))
 
         # 2. PiP Preview of Canny Preprocessed 64x64 input
         pip_card = tk.Frame(right_col, bg="#222b3a", bd=1, relief="solid")
@@ -287,6 +305,15 @@ class ISLDesktopApp:
         self.btn_snapshot = ttk.Button(btn_stream_row, text="📷 Snapshot", style="Action.TButton", command=self.take_snapshot)
         self.btn_snapshot.pack(side=tk.RIGHT, padx=(4, 0))
 
+        # Auto-Capture on Sign Result Checkbox
+        self.auto_capture_var = tk.BooleanVar(value=True)
+        self.auto_capture_chk = ttk.Checkbutton(
+            ctrl_card,
+            text="📸 Auto-Capture on Sign Result",
+            variable=self.auto_capture_var
+        )
+        self.auto_capture_chk.pack(anchor=tk.W, padx=14, pady=(2, 6))
+
         # 4. Settings & Gating Parameters
         param_card = tk.Frame(right_col, bg="#222b3a", bd=1, relief="solid")
         param_card.pack(fill=tk.X, padx=12, pady=(0, 12))
@@ -296,10 +323,10 @@ class ISLDesktopApp:
         # Confidence Threshold Slider
         thresh_row = tk.Frame(param_card, bg="#222b3a")
         thresh_row.pack(fill=tk.X, padx=12, pady=2)
-        self.thresh_lbl = tk.Label(thresh_row, text="Confidence Gate: 70%", font=("Segoe UI", 9), fg="#e2e8f0", bg="#222b3a")
+        self.thresh_lbl = tk.Label(thresh_row, text="Confidence Gate: 55%", font=("Segoe UI", 9), fg="#e2e8f0", bg="#222b3a")
         self.thresh_lbl.pack(side=tk.LEFT)
 
-        self.thresh_slider = ttk.Scale(param_card, from_=50, to=95, value=70, command=self.on_thresh_change)
+        self.thresh_slider = ttk.Scale(param_card, from_=35, to=95, value=55, command=self.on_thresh_change)
         self.thresh_slider.pack(fill=tk.X, padx=12, pady=(0, 6))
 
         # Stability Hold Duration Slider
@@ -355,14 +382,28 @@ class ISLDesktopApp:
     def init_engine_thread(self):
         def _load():
             try:
+                # Prefer retrained real camera model if available
+                real_model = Path("artifacts/best_model_real.keras")
+                real_map = Path("artifacts/class_mapping_real.json")
+
+                if real_model.exists() and real_map.exists():
+                    model_path = str(real_model)
+                    map_path = str(real_map)
+                    model_desc = "26 Classes: A-Z (Real Camera Model)"
+                else:
+                    model_path = "artifacts/best_model.keras"
+                    map_path = "artifacts/class_mapping.json"
+                    model_desc = "35 Classes: 1-9, A-Z (Studio Model)"
+
                 self.engine = ISLInferenceEngine(
-                    model_path="artifacts/best_model.keras",
-                    class_mapping_path="artifacts/class_mapping.json",
-                    confidence_threshold=0.70,
+                    model_path=model_path,
+                    class_mapping_path=map_path,
+                    confidence_threshold=0.55,
                     smoothing_window=5,
                     stability_duration=1.0,
                     margin_scale=1.15
                 )
+                self.model_description = model_desc
                 self.root.after(0, self.on_engine_ready)
             except Exception as e:
                 self.root.after(0, lambda: self.on_engine_error(str(e)))
@@ -370,8 +411,9 @@ class ISLDesktopApp:
         threading.Thread(target=_load, daemon=True).start()
 
     def on_engine_ready(self):
-        self.engine_status_lbl.configure(text="● Neural Network Ready", fg="#10b981")
-        self.status_msg_lbl.configure(text="Neural Network & MediaPipe ready. Click [Start Webcam] to start.")
+        desc = getattr(self, "model_description", "Neural Network Ready")
+        self.engine_status_lbl.configure(text=f"● {desc}", fg="#10b981")
+        self.status_msg_lbl.configure(text=f"Ready: {desc}. Click [Start Webcam] to begin.")
 
     def on_engine_error(self, err_msg):
         self.engine_status_lbl.configure(text="● Model Load Error", fg="#ef4444")
@@ -532,6 +574,17 @@ class ISLDesktopApp:
                 fg="#94a3b8"
             )
 
+        # Update Hand Mode Label
+        if "hand_mode" in result:
+            self.hand_mode_lbl.configure(text=f"✋ {result['hand_mode']}")
+
+        # Update Top-3 Breakdown Label
+        if result.get("top3"):
+            t_str = " | ".join([f"{item['class']}:{item['prob']*100:.0f}%" for item in result["top3"]])
+            self.top3_lbl.configure(text=f"Top 3: {t_str}")
+        else:
+            self.top3_lbl.configure(text="Top 3: —")
+
         # Update Fingerspelling Entry
         current_text = self.text_entry.get()
         if current_text != self.engine.spelled_text:
@@ -559,6 +612,31 @@ class ISLDesktopApp:
         # Save last frames for snapshot
         self.last_annotated = annotated
         self.last_prep = prep_preview
+        self.last_result = result
+
+        # Auto-Capture Full Screen on Confirmed Result
+        if result.get("new_char_confirmed") and self.auto_capture_var.get() and self.engine:
+            app_win_img = None
+            try:
+                pil_win = self.capture_full_window()
+                if pil_win is not None:
+                    app_win_img = cv2.cvtColor(np.array(pil_win), cv2.COLOR_RGB2BGR)
+            except Exception:
+                pass
+
+            snap_res = self.engine.save_accurate_snapshot(
+                frame_bgr=annotated,
+                prep_preview=prep_preview,
+                result=result,
+                prefix="auto_result",
+                snapshots_dir=self.snapshots_dir,
+                capture_fullscreen=True,
+                app_window_img=app_win_img
+            )
+            self.status_msg_lbl.configure(
+                text=f"📸 Auto-Captured Full Screen [{result['confirmed_char']}] ({snap_res['confidence']}%) -> {snap_res['filename']}",
+                fg="#38bdf8"
+            )
 
         # Schedule next frame (~30ms = ~33 FPS)
         if self.is_running:
@@ -700,25 +778,44 @@ class ISLDesktopApp:
             return None
 
     def take_snapshot(self):
-        snap_id = int(time.time())
-        window_img = self.capture_full_window()
-
-        if window_img is not None:
-            snap_path = self.snapshots_dir / f"gui_snapshot_{snap_id}.png"
-            window_img.save(str(snap_path))
-        elif hasattr(self, "last_annotated") and self.last_annotated is not None:
-            snap_path = self.snapshots_dir / f"gui_snapshot_{snap_id}.png"
-            cv2.imwrite(str(snap_path), self.last_annotated)
-        else:
+        """Saves a pixel-accurate, high-resolution full-screen snapshot of the entire desktop and app."""
+        if not hasattr(self, "last_annotated") or self.last_annotated is None:
             self.status_msg_lbl.configure(text="No active frame to capture.", fg="#fbbf24")
             return
 
-        if hasattr(self, "last_prep") and self.last_prep is not None:
-            canny_path = self.snapshots_dir / f"gui_canny_{snap_id}.png"
-            cv2.imwrite(str(canny_path), self.last_prep)
+        res = getattr(self, "last_result", None) or {"predicted_class": "MANUAL", "confidence": 1.0}
+        app_win_img = None
+        try:
+            pil_win = self.capture_full_window()
+            if pil_win is not None:
+                app_win_img = cv2.cvtColor(np.array(pil_win), cv2.COLOR_RGB2BGR)
+        except Exception:
+            pass
 
-        self.status_msg_lbl.configure(text=f"Screenshot Captured: {snap_path.name}", fg="#38bdf8")
-        self.root.after(3000, lambda: self.status_msg_lbl.configure(
+        if self.engine:
+            snap_res = self.engine.save_accurate_snapshot(
+                frame_bgr=self.last_annotated,
+                prep_preview=getattr(self, "last_prep", None),
+                result=res,
+                prefix="manual_snapshot",
+                snapshots_dir=self.snapshots_dir,
+                capture_fullscreen=True,
+                app_window_img=app_win_img
+            )
+            self.status_msg_lbl.configure(
+                text=f"📸 Full Screen Saved: {snap_res['filename']}",
+                fg="#10b981"
+            )
+        else:
+            snap_id = int(time.time())
+            snap_path = self.snapshots_dir / f"fullscreen_snapshot_{snap_id}.png"
+            if app_win_img is not None:
+                cv2.imwrite(str(snap_path), app_win_img)
+            else:
+                cv2.imwrite(str(snap_path), self.last_annotated)
+            self.status_msg_lbl.configure(text=f"Full Screen Saved: {snap_path.name}", fg="#10b981")
+
+        self.root.after(3500, lambda: self.status_msg_lbl.configure(
             text="Webcam running. Present ISL signs in view." if self.is_running else "Ready.",
             fg="#94a3b8"
         ))

@@ -34,10 +34,12 @@ def draw_hud(
     result: dict,
     prep_preview: np.ndarray,
     tracking_mode: str = "Dynamic (MediaPipe)",
-    threshold: float = 0.70
+    threshold: float = 0.70,
+    notification_msg: str = None,
+    num_classes: int = 26
 ) -> np.ndarray:
     """
-    Renders an overlay HUD on the frame.
+    Renders an overlay HUD on the frame with optional auto-capture notification badge.
     """
     h, w = frame.shape[:2]
     canvas = frame.copy()
@@ -49,12 +51,13 @@ def draw_hud(
     cv2.addWeighted(overlay, 0.85, canvas, 0.15, 0, canvas)
     cv2.line(canvas, (0, header_h), (w, header_h), (50, 70, 90), 1)
 
+    classes_label = "26 CLASSES: A-Z (REAL CAMERA MODEL)" if num_classes == 26 else f"{num_classes} CLASSES (1-9, A-Z)"
     cv2.putText(
         canvas,
-        "ISL REAL-TIME RECOGNITION (35 CLASSES: 1-9, A-Z)",
+        f"ISL REAL-TIME RECOGNITION ({classes_label})",
         (16, 25),
         cv2.FONT_HERSHEY_DUPLEX,
-        0.58,
+        0.54,
         (255, 255, 255),
         1,
         cv2.LINE_AA
@@ -71,6 +74,16 @@ def draw_hud(
         1,
         cv2.LINE_AA
     )
+
+    # 1.5 Auto-Capture Notification Badge (Top Center)
+    if notification_msg:
+        nb_w = 480
+        nb_h = 36
+        nb_x = (w - nb_w) // 2
+        nb_y = header_h + 10
+        cv2.rectangle(canvas, (nb_x - 2, nb_y - 2), (nb_x + nb_w + 2, nb_y + nb_h + 2), (0, 255, 180), 2)
+        cv2.rectangle(canvas, (nb_x, nb_y), (nb_x + nb_w, nb_y + nb_h), (16, 24, 32), -1)
+        cv2.putText(canvas, notification_msg, (nb_x + 14, nb_y + 24), cv2.FONT_HERSHEY_DUPLEX, 0.52, (0, 255, 180), 1, cv2.LINE_AA)
 
     # 2. Picture-in-Picture (PiP) for Canny Preprocessing (Top-Right)
     pip_size = 120
@@ -329,14 +342,19 @@ Interactive Controls:
 
 
 def main():
+    default_model = "artifacts/best_model_real.keras" if Path("artifacts/best_model_real.keras").exists() else "artifacts/best_model.keras"
+    default_mapping = "artifacts/class_mapping_real.json" if Path("artifacts/best_model_real.keras").exists() else "artifacts/class_mapping.json"
+
     parser = argparse.ArgumentParser(description="Real-Time ISL Webcam Detection & Text Accumulator")
     parser.add_argument("--camera", type=int, default=0, help="Camera device index (default: 0)")
-    parser.add_argument("--model", type=str, default="artifacts/best_model.keras", help="Path to trained model")
-    parser.add_argument("--mapping", type=str, default="artifacts/class_mapping.json", help="Path to class mapping")
-    parser.add_argument("--threshold", type=float, default=0.70, help="Confidence threshold (default: 0.70)")
+    parser.add_argument("--model", type=str, default=default_model, help="Path to trained model")
+    parser.add_argument("--mapping", type=str, default=default_mapping, help="Path to class mapping")
+    parser.add_argument("--threshold", type=float, default=0.55, help="Confidence threshold (default: 0.55)")
     parser.add_argument("--window", type=int, default=5, help="Temporal smoothing window size (default: 5)")
     parser.add_argument("--stability", type=float, default=1.0, help="Hold duration (seconds) to spell character")
     parser.add_argument("--margin", type=float, default=1.15, help="Hand bounding box margin scale (default: 1.15)")
+    parser.add_argument("--auto-capture", dest="auto_capture", action="store_true", default=True, help="Auto-capture screenshot on recognized sign result (default: True)")
+    parser.add_argument("--no-auto-capture", dest="auto_capture", action="store_false", help="Disable auto-capture on recognized sign result")
     parser.add_argument("--benchmark", action="store_true", help="Run automated latency & stability benchmark")
     parser.add_argument("--bench-frames", type=int, default=100, help="Number of benchmark frames")
     args = parser.parse_args()
@@ -384,14 +402,19 @@ def main():
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
     cv2.resizeWindow(window_name, 960, 720)
 
+    notification_msg = None
+    notification_until = 0.0
+
     print("\n" + "=" * 60)
     print("  ISL REAL-TIME WEBCAM APP RUNNING")
+    print(f"  Model: {args.model} ({len(engine.classes)} classes)")
+    print(f"  Auto-Capture on Result: {'ENABLED (reports/snapshots/)' if args.auto_capture else 'DISABLED'}")
     print("  Press [Q] or [ESC] to Exit")
     print("  Press [SPACE] to Add Space")
     print("  Press [BACKSPACE] to Delete Last Char")
     print("  Press [C] to Clear Text Buffer")
     print("  Press [F] to Toggle Dynamic / Fixed ROI")
-    print("  Press [S] to Save Snapshot")
+    print("  Press [S] to Save Manual Accurate Snapshot")
     print("=" * 60 + "\n")
 
     try:
@@ -465,21 +488,53 @@ def main():
                     "latency_ms": 25.0,
                     "fps": 30.0,
                     "spelled_text": engine.spelled_text,
-                    "hold_progress": 0.0
+                    "hold_progress": 0.0,
+                    "new_char_confirmed": False
                 }
                 mode_str = "Fixed Center Box"
             else:
                 annotated, prep_preview, result = engine.process_frame(frame)
                 mode_str = "Dynamic (MediaPipe)"
 
-            # Draw HUD
+            # Check active notification expiration
+            active_notice = notification_msg if time.time() < notification_until else None
+
+            # Draw Full Application HUD Frame (1280x720)
             hud_frame = draw_hud(
                 annotated,
                 result,
                 prep_preview,
                 tracking_mode=mode_str,
-                threshold=engine.confidence_threshold
+                threshold=engine.confidence_threshold,
+                notification_msg=active_notice,
+                num_classes=len(engine.classes)
             )
+
+            # --- AUTO-CAPTURE ACCURATE FULL SCREEN ON RESULT ---
+            if args.auto_capture and result.get("new_char_confirmed"):
+                snap_info = engine.save_accurate_snapshot(
+                    frame_bgr=annotated,
+                    prep_preview=prep_preview,
+                    result=result,
+                    prefix="auto_result",
+                    snapshots_dir=snapshots_dir,
+                    capture_fullscreen=True,
+                    app_window_img=hud_frame
+                )
+                notification_msg = f"📸 FULL SCREEN CAPTURED: [{result['confirmed_char']}] ({snap_info['confidence']}%)"
+                notification_until = time.time() + 2.5
+                print(f"[WebcamApp] [AUTO-CAPTURED FULL SCREEN] Recognized '{result['confirmed_char']}' ({snap_info['confidence']}%) -> Saved Full Screen: {snap_info['filename']}")
+
+                # Re-stamp HUD banner with the new notification badge
+                hud_frame = draw_hud(
+                    annotated,
+                    result,
+                    prep_preview,
+                    tracking_mode=mode_str,
+                    threshold=engine.confidence_threshold,
+                    notification_msg=notification_msg,
+                    num_classes=len(engine.classes)
+                )
 
             cv2.imshow(window_name, hud_frame)
 
@@ -500,11 +555,18 @@ def main():
                 use_fixed_roi = not use_fixed_roi
                 print(f"[WebcamApp] Switched tracking mode to: {'Fixed ROI' if use_fixed_roi else 'Dynamic MediaPipe'}")
             elif key in [ord('s'), ord('S')]:
-                snap_id = int(time.time())
-                cv2.imwrite(str(snapshots_dir / f"snapshot_{snap_id}.png"), hud_frame)
-                if prep_preview is not None:
-                    cv2.imwrite(str(snapshots_dir / f"canny_preview_{snap_id}.png"), prep_preview)
-                print(f"[WebcamApp] Saved snapshot_{snap_id}.png to {snapshots_dir}")
+                snap_info = engine.save_accurate_snapshot(
+                    frame_bgr=annotated,
+                    prep_preview=prep_preview,
+                    result=result,
+                    prefix="manual_snapshot",
+                    snapshots_dir=snapshots_dir,
+                    capture_fullscreen=True,
+                    app_window_img=hud_frame
+                )
+                notification_msg = f"📸 FULL SCREEN CAPTURED: [{snap_info['char']}]"
+                notification_until = time.time() + 2.5
+                print(f"[WebcamApp] [MANUAL SNAPSHOT] Saved Full Screen -> {snap_info['filename']}")
 
     finally:
         cap.release()

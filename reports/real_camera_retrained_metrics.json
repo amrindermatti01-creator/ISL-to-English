@@ -1,0 +1,169 @@
+{
+  "model": "artifacts\\best_model_real.keras",
+  "test_samples": 5198,
+  "correct_predictions": 4709,
+  "overall_accuracy_percent": 90.59253559061177,
+  "mean_confidence_percent": 94.67409253120422,
+  "inference_latency_ms": 1.741355453467727,
+  "letters_accuracy_percent": 92.3076923076923,
+  "letters_correct": 24,
+  "letters_total": 26,
+  "canonical_letters_results": [
+    {
+      "letter": "A",
+      "predicted": "A",
+      "confidence": 0.9992009997367859,
+      "is_correct": true
+    },
+    {
+      "letter": "B",
+      "predicted": "B",
+      "confidence": 0.9996745586395264,
+      "is_correct": true
+    },
+    {
+      "letter": "C",
+      "predicted": "C",
+      "confidence": 0.9991214871406555,
+      "is_correct": true
+    },
+    {
+      "letter": "D",
+      "predicted": "D",
+      "confidence": 0.9991652965545654,
+      "is_correct": true
+    },
+    {
+      "letter": "E",
+      "predicted": "E",
+      "confidence": 0.9995824694633484,
+      "is_correct": true
+    },
+    {
+      "letter": "F",
+      "predicted": "F",
+      "confidence": 0.9963107705116272,
+      "is_correct": true
+    },
+    {
+      "letter": "G",
+      "predicted": "G",
+      "confidence": 0.9991901516914368,
+      "is_correct": true
+    },
+    {
+      "letter": "H",
+      "predicted": "H",
+      "confidence": 0.9993748068809509,
+      "is_correct": true
+    },
+    {
+      "letter": "I",
+      "predicted": "I",
+      "confidence": 0.999645471572876,
+      "is_correct": true
+    },
+    {
+      "letter": "J",
+      "predicted": "J",
+      "confidence": 0.9975979924201965,
+      "is_correct": true
+    },
+    {
+      "letter": "K",
+      "predicted": "K",
+      "confidence": 0.9981959462165833,
+      "is_correct": true
+    },
+    {
+      "letter": "L",
+      "predicted": "L",
+      "confidence": 0.9995367527008057,
+      "is_correct": true
+    },
+    {
+      "letter": "M",
+      "predicted": "M",
+      "confidence": 0.9982523322105408,
+      "is_correct": true
+    },
+    {
+      "letter": "N",
+      "predicted": "N",
+      "confidence": 0.995147168636322,
+      "is_correct": true
+    },
+    {
+      "letter": "O",
+      "predicted": "O",
+      "confidence": 0.9999279975891113,
+      "is_correct": true
+    },
+    {
+      "letter": "P",
+      "predicted": "P",
+      "confidence": 0.9999363422393799,
+      "is_correct": true
+    },
+    {
+      "letter": "Q",
+      "predicted": "Q",
+      "confidence": 0.9993205070495605,
+      "is_correct": true
+    },
+    {
+      "letter": "R",
+      "predicted": "R",
+      "confidence": 0.9519950151443481,
+      "is_correct": true
+    },
+    {
+      "letter": "S",
+      "predicted": "S",
+      "confidence": 0.9921795129776001,
+      "is_correct": true
+    },
+    {
+      "letter": "T",
+      "predicted": "T",
+      "confidence": 0.9988887906074524,
+      "is_correct": true
+    },
+    {
+      "letter": "U",
+      "predicted": "U",
+      "confidence": 0.9936163425445557,
+      "is_correct": true
+    },
+    {
+      "letter": "V",
+      "predicted": "V",
+      "confidence": 0.9999363422393799,
+      "is_correct": true
+    },
+    {
+      "letter": "W",
+      "predicted": "I",
+      "confidence": 0.6653940081596375,
+      "is_correct": false
+    },
+    {
+      "letter": "X",
+      "predicted": "X",
+      "confidence": 0.9970921277999878,
+      "is_correct": true
+    },
+    {
+      "letter": "Y",
+      "predicted": "Y",
+      "confidence": 0.9766185283660889,
+      "is_correct": true
+    },
+    {
+      "letter": "Z",
+      "predicted": "J",
+      "confidence": 0.5555957555770874,
+      "is_correct": false
+    }
+  ]
+}

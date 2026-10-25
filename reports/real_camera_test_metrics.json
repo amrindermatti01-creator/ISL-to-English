@@ -1,0 +1,258 @@
+{
+  "dataset_name": "Real ISL Camera dataset",
+  "dataset_path": "C:\\Users\\hp\\Real ISL Camera dataset",
+  "total_test_samples": 5198,
+  "corrupted_files_count": 2,
+  "corrupted_files": [
+    "C:\\Users\\hp\\Real ISL Camera dataset\\Testing\\E\\301.jpg",
+    "C:\\Users\\hp\\Real ISL Camera dataset\\Testing\\K\\301.jpg"
+  ],
+  "classes_evaluated": 26,
+  "overall_accuracy": 0.10350134667179685,
+  "correct_predictions": 538,
+  "digit_predictions_count": 647,
+  "digit_predictions_pct": 0.1244709503655252,
+  "letter_predictions_count": 4551,
+  "letter_predictions_pct": 0.8755290496344748,
+  "mean_prediction_confidence": 0.7812591195106506,
+  "reference_letters_accuracy": 0.07692307692307693,
+  "sample_mp_accuracy": 0.11538461538461539,
+  "sample_direct_accuracy": 0.11153846153846154,
+  "sample_mp_detection_rate": 0.9961538461538462,
+  "per_class": [
+    {
+      "class": "A",
+      "samples": 200,
+      "correct": 121,
+      "accuracy": 0.605,
+      "mean_confidence": 0.857828676700592,
+      "top_predictions": "A: 121 (60.5%), B: 59 (29.5%), P: 7 (3.5%)",
+      "top_predicted_class": "A"
+    },
+    {
+      "class": "B",
+      "samples": 200,
+      "correct": 36,
+      "accuracy": 0.18,
+      "mean_confidence": 0.8310258388519287,
+      "top_predictions": "P: 101 (50.5%), B: 36 (18.0%), Q: 25 (12.5%)",
+      "top_predicted_class": "P"
+    },
+    {
+      "class": "C",
+      "samples": 200,
+      "correct": 2,
+      "accuracy": 0.01,
+      "mean_confidence": 0.6720988750457764,
+      "top_predictions": "B: 50 (25.0%), P: 47 (23.5%), I: 24 (12.0%)",
+      "top_predicted_class": "B"
+    },
+    {
+      "class": "D",
+      "samples": 200,
+      "correct": 0,
+      "accuracy": 0.0,
+      "mean_confidence": 0.6017240881919861,
+      "top_predictions": "5: 56 (28.0%), H: 45 (22.5%), A: 24 (12.0%)",
+      "top_predicted_class": "5"
+    },
+    {
+      "class": "E",
+      "samples": 199,
+      "correct": 0,
+      "accuracy": 0.0,
+      "mean_confidence": 0.8442615270614624,
+      "top_predictions": "A: 115 (57.8%), D: 50 (25.1%), P: 12 (6.0%)",
+      "top_predicted_class": "A"
+    },
+    {
+      "class": "F",
+      "samples": 200,
+      "correct": 0,
+      "accuracy": 0.0,
+      "mean_confidence": 0.9399921894073486,
+      "top_predictions": "A: 134 (67.0%), C: 25 (12.5%), P: 16 (8.0%)",
+      "top_predicted_class": "A"
+    },
+    {
+      "class": "G",
+      "samples": 200,
+      "correct": 0,
+      "accuracy": 0.0,
+      "mean_confidence": 0.7357754707336426,
+      "top_predictions": "V: 79 (39.5%), X: 35 (17.5%), H: 29 (14.5%)",
+      "top_predicted_class": "V"
+    },
+    {
+      "class": "H",
+      "samples": 200,
+      "correct": 96,
+      "accuracy": 0.48,
+      "mean_confidence": 0.8026692271232605,
+      "top_predictions": "H: 96 (48.0%), P: 50 (25.0%), J: 41 (20.5%)",
+      "top_predicted_class": "H"
+    },
+    {
+      "class": "I",
+      "samples": 200,
+      "correct": 72,
+      "accuracy": 0.36,
+      "mean_confidence": 0.8054912090301514,
+      "top_predictions": "I: 72 (36.0%), 6: 32 (16.0%), U: 30 (15.0%)",
+      "top_predicted_class": "I"
+    },
+    {
+      "class": "J",
+      "samples": 200,
+      "correct": 0,
+      "accuracy": 0.0,
+      "mean_confidence": 0.8498232960700989,
+      "top_predictions": "P: 93 (46.5%), W: 43 (21.5%), U: 40 (20.0%)",
+      "top_predicted_class": "P"
+    },
+    {
+      "class": "K",
+      "samples": 199,
+      "correct": 50,
+      "accuracy": 0.25125628140703515,
+      "mean_confidence": 0.7864605784416199,
+      "top_predictions": "K: 50 (25.1%), 6: 49 (24.6%), Q: 36 (18.1%)",
+      "top_predicted_class": "K"
+    },
+    {
+      "class": "L",
+      "samples": 200,
+      "correct": 106,
+      "accuracy": 0.53,
+      "mean_confidence": 0.7953311204910278,
+      "top_predictions": "L: 106 (53.0%), I: 61 (30.5%), F: 26 (13.0%)",
+      "top_predicted_class": "L"
+    },
+    {
+      "class": "M",
+      "samples": 200,
+      "correct": 0,
+      "accuracy": 0.0,
+      "mean_confidence": 0.7614098191261292,
+      "top_predictions": "H: 49 (24.5%), R: 47 (23.5%), P: 47 (23.5%)",
+      "top_predicted_class": "H"
+    },
+    {
+      "class": "N",
+      "samples": 200,
+      "correct": 0,
+      "accuracy": 0.0,
+      "mean_confidence": 0.7645171284675598,
+      "top_predictions": "P: 72 (36.0%), H: 50 (25.0%), A: 26 (13.0%)",
+      "top_predicted_class": "P"
+    },
+    {
+      "class": "O",
+      "samples": 200,
+      "correct": 50,
+      "accuracy": 0.25,
+      "mean_confidence": 0.8169288039207458,
+      "top_predictions": "A: 50 (25.0%), O: 50 (25.0%), V: 31 (15.5%)",
+      "top_predicted_class": "A"
+    },
+    {
+      "class": "P",
+      "samples": 200,
+      "correct": 0,
+      "accuracy": 0.0,
+      "mean_confidence": 0.8247089982032776,
+      "top_predictions": "V: 54 (27.0%), 9: 48 (24.0%), W: 27 (13.5%)",
+      "top_predicted_class": "V"
+    },
+    {
+      "class": "Q",
+      "samples": 200,
+      "correct": 0,
+      "accuracy": 0.0,
+      "mean_confidence": 0.697041928768158,
+      "top_predictions": "L: 46 (23.0%), P: 45 (22.5%), W: 39 (19.5%)",
+      "top_predicted_class": "L"
+    },
+    {
+      "class": "R",
+      "samples": 200,
+      "correct": 0,
+      "accuracy": 0.0,
+      "mean_confidence": 0.7679576277732849,
+      "top_predictions": "Q: 45 (22.5%), P: 42 (21.0%), 6: 36 (18.0%)",
+      "top_predicted_class": "Q"
+    },
+    {
+      "class": "S",
+      "samples": 200,
+      "correct": 3,
+      "accuracy": 0.015,
+      "mean_confidence": 0.8194823265075684,
+      "top_predictions": "P: 60 (30.0%), 6: 50 (25.0%), V: 48 (24.0%)",
+      "top_predicted_class": "P"
+    },
+    {
+      "class": "T",
+      "samples": 200,
+      "correct": 0,
+      "accuracy": 0.0,
+      "mean_confidence": 0.7239657044410706,
+      "top_predictions": "6: 52 (26.0%), V: 48 (24.0%), C: 41 (20.5%)",
+      "top_predicted_class": "6"
+    },
+    {
+      "class": "U",
+      "samples": 200,
+      "correct": 1,
+      "accuracy": 0.005,
+      "mean_confidence": 0.7587339878082275,
+      "top_predictions": "P: 58 (29.0%), O: 49 (24.5%), W: 32 (16.0%)",
+      "top_predicted_class": "P"
+    },
+    {
+      "class": "V",
+      "samples": 200,
+      "correct": 0,
+      "accuracy": 0.0,
+      "mean_confidence": 0.9033230543136597,
+      "top_predictions": "I: 98 (49.0%), P: 49 (24.5%), 6: 35 (17.5%)",
+      "top_predicted_class": "I"
+    },
+    {
+      "class": "W",
+      "samples": 200,
+      "correct": 1,
+      "accuracy": 0.005,
+      "mean_confidence": 0.7326069474220276,
+      "top_predictions": "9: 40 (20.0%), 6: 39 (19.5%), P: 35 (17.5%)",
+      "top_predicted_class": "9"
+    },
+    {
+      "class": "X",
+      "samples": 200,
+      "correct": 0,
+      "accuracy": 0.0,
+      "mean_confidence": 0.6928358674049377,
+      "top_predictions": "W: 50 (25.0%), U: 42 (21.0%), I: 34 (17.0%)",
+      "top_predicted_class": "W"
+    },
+    {
+      "class": "Y",
+      "samples": 200,
+      "correct": 0,
+      "accuracy": 0.0,
+      "mean_confidence": 0.720893383026123,
+      "top_predictions": "6: 40 (20.0%), T: 35 (17.5%), S: 34 (17.0%)",
+      "top_predicted_class": "6"
+    },
+    {
+      "class": "Z",
+      "samples": 200,
+      "correct": 0,
+      "accuracy": 0.0,
+      "mean_confidence": 0.8061894774436951,
+      "top_predictions": "C: 45 (22.5%), H: 43 (21.5%), 6: 38 (19.0%)",
+      "top_predicted_class": "C"
+    }
+  ]
+}

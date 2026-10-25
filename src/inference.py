@@ -27,12 +27,117 @@ import mediapipe as mp
 
 from src.preprocessing import preprocess_image
 
+def capture_fullscreen_desktop():
+    """
+    Captures the complete native desktop full screen across primary display / virtual screen.
+    Uses PIL ImageGrab with winsta0 attachment on Windows, with fallback to GDI BitBlt.
+    Returns:
+        numpy.ndarray (BGR format, uint8) or None if desktop DC is unavailable.
+    """
+    if os.name == "nt":
+        import ctypes
+        try:
+            user32 = ctypes.windll.user32
+            # Attach to default desktop station if in background shell
+            h_winsta = user32.OpenWindowStationW('winsta0', False, 0x000F037F)
+            if h_winsta:
+                user32.SetProcessWindowStation(h_winsta)
+            h_desk = user32.OpenDesktopW('default', 0, False, 0x01FF)
+            if h_desk:
+                user32.SetThreadDesktop(h_desk)
+        except Exception:
+            pass
+
+    # 1. Primary Attempt: PIL ImageGrab (handles DPI scaling, all monitors, and compositing)
+    try:
+        from PIL import ImageGrab
+        img = ImageGrab.grab(all_screens=True)
+        arr = np.array(img)
+        if arr is not None and arr.size > 0:
+            bgr = cv2.cvtColor(arr, cv2.COLOR_RGB2BGR)
+            if bgr.shape[0] >= 100 and bgr.shape[1] >= 100 and bgr.max() > 0:
+                return bgr
+    except Exception:
+        pass
+
+    # 2. Secondary Attempt: Direct Windows GDI BitBlt
+    if os.name == "nt":
+        try:
+            import ctypes
+            from ctypes import wintypes
+            user32 = ctypes.windll.user32
+            gdi32 = ctypes.windll.gdi32
+
+            try:
+                ctypes.windll.shcore.SetProcessDpiAwareness(2)
+            except Exception:
+                try:
+                    user32.SetProcessDPIAware()
+                except Exception:
+                    pass
+
+            x = user32.GetSystemMetrics(76)  # SM_XVIRTUALSCREEN
+            y = user32.GetSystemMetrics(77)  # SM_YVIRTUALSCREEN
+            w = user32.GetSystemMetrics(78)  # SM_CXVIRTUALSCREEN
+            h = user32.GetSystemMetrics(79)  # SM_CYVIRTUALSCREEN
+
+            if w <= 0 or h <= 0:
+                w = user32.GetSystemMetrics(0)
+                h = user32.GetSystemMetrics(1)
+                x, y = 0, 0
+
+            hdc_screen = user32.GetDC(0)
+            hdc_mem = gdi32.CreateCompatibleDC(hdc_screen)
+            hbm = gdi32.CreateCompatibleBitmap(hdc_screen, w, h)
+            gdi32.SelectObject(hdc_mem, hbm)
+
+            # 0x00CC0020 = SRCCOPY
+            gdi32.BitBlt(hdc_mem, 0, 0, w, h, hdc_screen, x, y, 0x00CC0020)
+
+            class BITMAPINFOHEADER(ctypes.Structure):
+                _fields_ = [
+                    ('biSize', wintypes.DWORD),
+                    ('biWidth', wintypes.LONG),
+                    ('biHeight', wintypes.LONG),
+                    ('biPlanes', wintypes.WORD),
+                    ('biBitCount', wintypes.WORD),
+                    ('biCompression', wintypes.DWORD),
+                    ('biSizeImage', wintypes.DWORD),
+                    ('biXPelsPerMeter', wintypes.LONG),
+                    ('biYPelsPerMeter', wintypes.LONG),
+                    ('biClrUsed', wintypes.DWORD),
+                    ('biClrImportant', wintypes.DWORD)
+                ]
+
+            bmi = BITMAPINFOHEADER()
+            bmi.biSize = ctypes.sizeof(BITMAPINFOHEADER)
+            bmi.biWidth = w
+            bmi.biHeight = -h
+            bmi.biPlanes = 1
+            bmi.biBitCount = 32
+            bmi.biCompression = 0
+
+            buf = ctypes.create_string_buffer(w * h * 4)
+            gdi32.GetDIBits(hdc_mem, hbm, 0, h, buf, ctypes.byref(bmi), 0)
+
+            gdi32.DeleteObject(hbm)
+            gdi32.DeleteDC(hdc_mem)
+            user32.ReleaseDC(0, hdc_screen)
+
+            arr = np.frombuffer(buf, dtype=np.uint8).reshape((h, w, 4))
+            bgr = cv2.cvtColor(arr, cv2.COLOR_BGRA2BGR)
+            return bgr
+        except Exception:
+            pass
+
+    return None
+
 class ISLInferenceEngine:
     def __init__(
         self,
         model_path="artifacts/best_model.keras",
         class_mapping_path="artifacts/class_mapping.json",
-        confidence_threshold=0.70,
+        confidence_threshold=0.55,
         smoothing_window=5,
         target_size=(64, 64),
         threshold_value=90,
@@ -78,9 +183,10 @@ class ISLInferenceEngine:
             min_tracking_confidence=0.5
         )
 
-        # Temporal smoothing deque
+        # Temporal smoothing deques
         self.prediction_buffer = deque(maxlen=self.smoothing_window)
         self.confidence_buffer = deque(maxlen=self.smoothing_window)
+        self.prob_buffer = deque(maxlen=self.smoothing_window)
 
         # Fingerspelling accumulator state
         self.spelled_text = ""
@@ -170,7 +276,10 @@ class ISLInferenceEngine:
              'latency_ms': float,
              'fps': float,
              'spelled_text': str,
-             'hold_progress': float
+             'hold_progress': float,
+             'top3': list of dicts,
+             'num_hands': int,
+             'hand_mode': str
           }
         """
         t0 = time.time()
@@ -189,8 +298,12 @@ class ISLInferenceEngine:
         prep_preview = None
         raw_pred_class = None
         raw_confidence = 0.0
+        raw_predictions = None
+        num_hands = 0
+        top3_classes = []
 
         if mp_results.multi_hand_landmarks:
+            num_hands = len(mp_results.multi_hand_landmarks)
             # Draw hand skeleton
             for hand_landmarks in mp_results.multi_hand_landmarks:
                 self.mp_drawing.draw_landmarks(
@@ -222,35 +335,54 @@ class ISLInferenceEngine:
 
                 # Model forward pass
                 tensor_input = np.expand_dims(preprocessed, axis=0)  # (1, 64, 64, 1)
-                predictions = self.model(tensor_input, training=False).numpy()[0]
+                raw_predictions = self.model(tensor_input, training=False).numpy()[0]
 
-                best_idx = int(np.argmax(predictions))
-                raw_confidence = float(predictions[best_idx])
+                best_idx = int(np.argmax(raw_predictions))
+                raw_confidence = float(raw_predictions[best_idx])
                 raw_pred_class = self.idx_to_class.get(best_idx, "Unknown")
 
-        # Update temporal buffer
-        if raw_pred_class and raw_confidence >= self.confidence_threshold:
-            self.prediction_buffer.append(raw_pred_class)
-            self.confidence_buffer.append(raw_confidence)
-        else:
-            self.prediction_buffer.append(None)
-            self.confidence_buffer.append(0.0)
+        # Soft probability smoothing across frames (eliminates jitter and rapid dropouts)
+        if raw_predictions is not None:
+            self.prob_buffer.append(raw_predictions)
+            avg_probs = np.mean(self.prob_buffer, axis=0)
+            top3_idx = np.argsort(avg_probs)[::-1][:3]
+            top3_classes = [
+                {"class": self.idx_to_class.get(int(i), "?"), "prob": float(avg_probs[i])}
+                for i in top3_idx
+            ]
+            smooth_best_idx = int(top3_idx[0])
+            candidate_class = self.idx_to_class.get(smooth_best_idx, "Unknown")
+            candidate_conf = float(avg_probs[smooth_best_idx])
 
-        # Smooth prediction via majority voting
-        valid_predictions = [p for p in self.prediction_buffer if p is not None]
-        if valid_predictions and len(valid_predictions) >= (self.smoothing_window // 2 + 1):
-            majority_class, count = Counter(valid_predictions).most_common(1)[0]
-            avg_conf = float(np.mean([c for p, c in zip(self.prediction_buffer, self.confidence_buffer) if p == majority_class]))
-            smooth_class = majority_class
-            smooth_conf = avg_conf
-            is_reliable = True
+            if candidate_conf >= self.confidence_threshold:
+                smooth_class = candidate_class
+                smooth_conf = candidate_conf
+                is_reliable = True
+            else:
+                smooth_class = "No reliable sign detected"
+                smooth_conf = candidate_conf
+                is_reliable = False
         else:
+            self.prob_buffer.clear()
             smooth_class = "No reliable sign detected"
             smooth_conf = 0.0
             is_reliable = False
+            top3_classes = []
+
+        # Determine hand mode description
+        if num_hands == 1:
+            hand_mode = "Single-Hand (Digits 1-9, C, I, L, O, U, V)"
+        elif num_hands >= 2:
+            hand_mode = "Dual-Hand (Letters A, B, D-H, J-K, M-N, P-T, W-Z)"
+        else:
+            hand_mode = "No Hands in View"
 
         # Update fingerspelling accumulator
         hold_progress = 0.0
+        new_char_confirmed = False
+        confirmed_char = None
+        confirmed_confidence = 0.0
+
         if is_reliable:
             if smooth_class == self.last_predicted_char:
                 if self.char_hold_start_time is None:
@@ -261,6 +393,9 @@ class ISLInferenceEngine:
                 if elapsed_hold >= self.stability_duration and not self.char_already_added:
                     self.spelled_text += smooth_class
                     self.char_already_added = True
+                    new_char_confirmed = True
+                    confirmed_char = smooth_class
+                    confirmed_confidence = smooth_conf
             else:
                 self.last_predicted_char = smooth_class
                 self.char_hold_start_time = time.time()
@@ -281,9 +416,117 @@ class ISLInferenceEngine:
             "latency_ms": round(self.latency_ms, 1),
             "fps": round(self.fps, 1),
             "spelled_text": self.spelled_text,
-            "hold_progress": round(hold_progress, 2)
+            "hold_progress": round(hold_progress, 2),
+            "top3": top3_classes,
+            "num_hands": num_hands,
+            "hand_mode": hand_mode,
+            "new_char_confirmed": new_char_confirmed,
+            "confirmed_char": confirmed_char,
+            "confirmed_confidence": round(confirmed_confidence, 4)
         }
         return annotated_frame, prep_preview, result
+
+    def save_accurate_snapshot(
+        self,
+        frame_bgr=None,
+        prep_preview=None,
+        result=None,
+        prefix="auto_result",
+        snapshots_dir="reports/snapshots",
+        capture_fullscreen=True,
+        full_screen_img=None,
+        app_window_img=None
+    ):
+        """
+        Saves a pixel-perfect, high-resolution screenshot when a sign is recognized.
+        Ensures the entire full screen is captured (not only the result frame) by:
+          1. Capturing the complete native desktop full screen (all monitors/windows).
+          2. Saving the full application window / HUD frame if available.
+          3. Saving the annotated camera frame and 64x64 Canny edge input.
+          4. Naming the primary file informatively: fullscreen_{prefix}_{char}_{conf}pct_{YYYYMMDD_HHMMSS}.png
+        """
+        out_dir = Path(snapshots_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+
+        char_str = "SIGN"
+        conf_pct = 0
+        if result:
+            char_str = str(result.get("confirmed_char") or result.get("predicted_class") or "SIGN").replace(" ", "_")
+            conf_pct = int(round((result.get("confidence") or 0.0) * 100))
+
+        # 1. FULL SCREEN CAPTURE (Whole Monitor / Desktop)
+        fs_img = full_screen_img
+        if fs_img is None and capture_fullscreen:
+            fs_img = capture_fullscreen_desktop()
+
+        fs_path = None
+        fs_filename = None
+        if fs_img is not None and getattr(fs_img, "size", 0) > 0:
+            fs_filename = f"fullscreen_{prefix}_{char_str}_{conf_pct}pct_{timestamp}.png"
+            fs_path = out_dir / fs_filename
+            cv2.imwrite(str(fs_path), fs_img, [cv2.IMWRITE_PNG_COMPRESSION, 3])
+
+        # 2. FULL APPLICATION WINDOW / HUD FRAME
+        win_path = None
+        win_filename = None
+        if app_window_img is not None and getattr(app_window_img, "size", 0) > 0:
+            win_filename = f"window_{prefix}_{char_str}_{conf_pct}pct_{timestamp}.png"
+            win_path = out_dir / win_filename
+            cv2.imwrite(str(win_path), app_window_img, [cv2.IMWRITE_PNG_COMPRESSION, 3])
+            if fs_path is None:
+                fs_path = win_path
+                fs_filename = win_filename
+
+        # 3. CAMERA RESULT COMPOSITE (with metadata footer)
+        res_path = None
+        res_filename = None
+        if frame_bgr is not None and getattr(frame_bgr, "size", 0) > 0:
+            h, w = frame_bgr.shape[:2]
+            composite = frame_bgr.copy()
+
+            banner_h = 44
+            footer = np.zeros((banner_h, w, 3), dtype=np.uint8)
+            footer[:] = (20, 24, 32)
+            cv2.line(footer, (0, 0), (w, 0), (56, 189, 248), 2)  # Cyan accent line
+
+            sign_info = f"RESULT: [{char_str}] ({conf_pct}%)"
+            text_info = f"Spelled: '{self.spelled_text}'"
+            meta_info = f"{time.strftime('%Y-%m-%d %H:%M:%S')} | FPS: {result.get('fps', 0):.1f} | Latency: {result.get('latency_ms', 0):.1f}ms" if result else ""
+
+            cv2.putText(footer, sign_info, (14, 29), cv2.FONT_HERSHEY_DUPLEX, 0.65, (0, 255, 180), 1, cv2.LINE_AA)
+            cv2.putText(footer, text_info, (240, 29), cv2.FONT_HERSHEY_SIMPLEX, 0.52, (255, 255, 255), 1, cv2.LINE_AA)
+            cv2.putText(footer, meta_info, (max(w - 420, 480), 29), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (180, 200, 220), 1, cv2.LINE_AA)
+
+            final_composite = np.vstack([composite, footer])
+            res_filename = f"result_{prefix}_{char_str}_{conf_pct}pct_{timestamp}.png"
+            res_path = out_dir / res_filename
+            cv2.imwrite(str(res_path), final_composite, [cv2.IMWRITE_PNG_COMPRESSION, 3])
+            if fs_path is None:
+                fs_path = res_path
+                fs_filename = res_filename
+
+        # 4. CANNY EDGE 64x64 PREVIEW
+        canny_path = None
+        if prep_preview is not None and getattr(prep_preview, "size", 0) > 0:
+            canny_filename = f"canny_{char_str}_{conf_pct}pct_{timestamp}.png"
+            canny_path = out_dir / canny_filename
+            scaled_canny = cv2.resize(prep_preview, (128, 128), interpolation=cv2.INTER_NEAREST)
+            cv2.imwrite(str(canny_path), scaled_canny, [cv2.IMWRITE_PNG_COMPRESSION, 3])
+
+        primary_path = fs_path or win_path or res_path
+        primary_filename = fs_filename or win_filename or res_filename or "snapshot.png"
+
+        return {
+            "fullscreen_path": str(fs_path) if fs_path else None,
+            "window_path": str(win_path) if win_path else None,
+            "result_path": str(res_path) if res_path else None,
+            "canny_path": str(canny_path) if canny_path else None,
+            "snapshot_path": str(primary_path),
+            "filename": primary_filename,
+            "char": char_str,
+            "confidence": conf_pct
+        }
 
     def add_space(self):
         self.spelled_text += " "
@@ -294,6 +537,10 @@ class ISLInferenceEngine:
 
     def clear_text(self):
         self.spelled_text = ""
+        self.last_predicted_char = None
+        self.char_hold_start_time = None
+        self.char_already_added = False
+        self.prob_buffer.clear()
 
     def release(self):
         if hasattr(self, "hands") and self.hands:
