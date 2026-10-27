@@ -1,0 +1,20 @@
+{
+  "name": "isl-to-english",
+  "version": "1.0.0",
+  "description": "Indian Sign Language (ISL) Recognition & English Converter",
+  "scripts": {
+    "dev": "run.bat",
+    "start": "run.bat",
+    "app": "python src/ui_app.py",
+    "webcam": "python src/webcam_app.py"
+  },
+  "keywords": [
+    "indian-sign-language",
+    "isl",
+    "computer-vision",
+    "tensorflow",
+    "mediapipe"
+  ],
+  "author": "Amrinder Matti",
+  "license": "MIT"
+}
