@@ -152,8 +152,9 @@ def create_stratified_splits(df: pd.DataFrame, train_ratio=0.80, val_ratio=0.10,
 
 
 def main():
+    default_data_dir = "C:/Users/hp/ISL_downloads/mendeley_isl" if Path("C:/Users/hp/ISL_downloads/mendeley_isl").exists() else "data/mendeley_isl"
     parser = argparse.ArgumentParser(description="Prepare and split Mendeley ISL dataset.")
-    parser.add_argument("--data-dir", type=str, default="data/mendeley_isl", help="Path to extracted Mendeley ISL images")
+    parser.add_argument("--data-dir", type=str, default=default_data_dir, help="Path to extracted Mendeley ISL images")
     parser.add_argument("--splits-dir", type=str, default="data/splits", help="Directory to save split CSV manifests")
     parser.add_argument("--artifacts-dir", type=str, default="artifacts", help="Directory to save class mapping")
     parser.add_argument("--workers", type=int, default=12, help="Number of worker threads")

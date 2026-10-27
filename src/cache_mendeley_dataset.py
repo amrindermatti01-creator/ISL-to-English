@@ -138,7 +138,16 @@ def cache_split_dataset(manifest_csv_path, class_to_idx, output_npz_path, num_wo
     df = pd.read_csv(manifest_csv_path)
     print(f"\nProcessing {len(df):,} samples from: {manifest_csv_path}")
 
-    paths = df["path"].tolist()
+    raw_paths = df["path"].tolist()
+    paths = []
+    external_base = Path("C:/Users/hp/ISL_downloads/mendeley_isl")
+    for p in raw_paths:
+        p_obj = Path(p)
+        if not p_obj.exists() and external_base.exists():
+            candidate = external_base / p_obj.parent.name / p_obj.name
+            if candidate.exists():
+                p_obj = candidate
+        paths.append(str(p_obj))
     labels = [class_to_idx[c] for c in df["class_name"]]
 
     features = []
