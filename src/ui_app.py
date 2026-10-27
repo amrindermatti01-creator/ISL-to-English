@@ -382,11 +382,19 @@ class ISLDesktopApp:
     def init_engine_thread(self):
         def _load():
             try:
-                # Prefer retrained real camera model if available
+                # Priority 1: Unified Combined Model (36 classes: 0-9 & A-Z, Adults & Teens)
+                combined_model = Path("artifacts/best_model_combined.keras")
+                combined_map = Path("artifacts/class_mapping_mendeley.json")
+
+                # Priority 2: Retrained Real Camera Model (26 classes: A-Z)
                 real_model = Path("artifacts/best_model_real.keras")
                 real_map = Path("artifacts/class_mapping_real.json")
 
-                if real_model.exists() and real_map.exists():
+                if combined_model.exists() and combined_map.exists():
+                    model_path = str(combined_model)
+                    map_path = str(combined_map)
+                    model_desc = "36 Classes: 0–9 & A–Z (Unified Real + Mendeley Adults/Teens Model)"
+                elif real_model.exists() and real_map.exists():
                     model_path = str(real_model)
                     map_path = str(real_map)
                     model_desc = "26 Classes: A-Z (Real Camera Model)"

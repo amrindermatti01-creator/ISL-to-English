@@ -1,0 +1,18 @@
+{
+  "dataset": "Mendeley ISL (Adults + Teenagers ONLY)",
+  "num_classes": 36,
+  "input_shape": [
+    64,
+    64,
+    1
+  ],
+  "train_samples": 53507,
+  "val_samples": 6674,
+  "test_samples": 6722,
+  "epochs_trained": 15,
+  "best_val_accuracy": 94.41,
+  "best_val_loss": 0.1772,
+  "test_accuracy": 94.58,
+  "test_loss": 0.1661,
+  "model_path": "C:\\Users\\hp\\ISL Detetcion and English Converter\\artifacts\\best_model_mendeley.keras"
+}

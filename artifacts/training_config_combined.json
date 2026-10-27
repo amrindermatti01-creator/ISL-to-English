@@ -1,0 +1,22 @@
+{
+  "dataset": "Combined (Real ISL Camera + Mendeley Adults & Teenagers)",
+  "num_classes": 36,
+  "input_shape": [
+    64,
+    64,
+    1
+  ],
+  "real_train_samples": 18198,
+  "mendeley_train_samples": 53507,
+  "total_train_samples": 71705,
+  "total_val_samples": 11872,
+  "batch_size": 128,
+  "epochs_trained": 12,
+  "best_val_accuracy": 94.36,
+  "best_val_loss": 0.3211,
+  "mendeley_test_accuracy": 98.14,
+  "mendeley_test_loss": 0.0707,
+  "real_test_accuracy": 91.73,
+  "real_test_loss": 0.4764,
+  "model_path": "C:\\Users\\hp\\ISL Detetcion and English Converter\\artifacts\\best_model_combined.keras"
+}

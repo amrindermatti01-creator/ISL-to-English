@@ -342,8 +342,15 @@ Interactive Controls:
 
 
 def main():
-    default_model = "artifacts/best_model_real.keras" if Path("artifacts/best_model_real.keras").exists() else "artifacts/best_model.keras"
-    default_mapping = "artifacts/class_mapping_real.json" if Path("artifacts/best_model_real.keras").exists() else "artifacts/class_mapping.json"
+    if Path("artifacts/best_model_combined.keras").exists() and Path("artifacts/class_mapping_mendeley.json").exists():
+        default_model = "artifacts/best_model_combined.keras"
+        default_mapping = "artifacts/class_mapping_mendeley.json"
+    elif Path("artifacts/best_model_real.keras").exists() and Path("artifacts/class_mapping_real.json").exists():
+        default_model = "artifacts/best_model_real.keras"
+        default_mapping = "artifacts/class_mapping_real.json"
+    else:
+        default_model = "artifacts/best_model.keras"
+        default_mapping = "artifacts/class_mapping.json"
 
     parser = argparse.ArgumentParser(description="Real-Time ISL Webcam Detection & Text Accumulator")
     parser.add_argument("--camera", type=int, default=0, help="Camera device index (default: 0)")

@@ -135,8 +135,8 @@ def capture_fullscreen_desktop():
 class ISLInferenceEngine:
     def __init__(
         self,
-        model_path="artifacts/best_model.keras",
-        class_mapping_path="artifacts/class_mapping.json",
+        model_path=str(Path("artifacts/best_model_combined.keras") if Path("artifacts/best_model_combined.keras").exists() else (Path("artifacts/best_model_real.keras") if Path("artifacts/best_model_real.keras").exists() else Path("artifacts/best_model.keras"))),
+        class_mapping_path=str(Path("artifacts/class_mapping_mendeley.json") if Path("artifacts/best_model_combined.keras").exists() else (Path("artifacts/class_mapping_real.json") if Path("artifacts/best_model_real.keras").exists() else Path("artifacts/class_mapping.json"))),
         confidence_threshold=0.55,
         smoothing_window=5,
         target_size=(64, 64),
@@ -163,8 +163,13 @@ class ISLInferenceEngine:
             raise FileNotFoundError(f"Class mapping file not found: {class_mapping_path}")
         with open(class_mapping_path, "r") as f:
             mapping = json.load(f)
-        self.idx_to_class = {int(k): v for k, v in mapping["idx_to_class"].items()}
-        self.classes = mapping["classes"]
+        if "idx_to_class" in mapping:
+            self.idx_to_class = {int(k): v for k, v in mapping["idx_to_class"].items()}
+        elif "class_to_idx" in mapping:
+            self.idx_to_class = {int(v): k for k, v in mapping["class_to_idx"].items()}
+        else:
+            self.idx_to_class = {i: c for i, c in enumerate(mapping["classes"])}
+        self.classes = mapping.get("classes", [self.idx_to_class[i] for i in range(len(self.idx_to_class))])
 
         # Load model
         if not self.model_path.exists():
@@ -179,8 +184,8 @@ class ISLInferenceEngine:
         self.hands = self.mp_hands.Hands(
             static_image_mode=False,
             max_num_hands=2,
-            min_detection_confidence=0.6,
-            min_tracking_confidence=0.5
+            min_detection_confidence=0.48,
+            min_tracking_confidence=0.45
         )
 
         # Temporal smoothing deques
@@ -203,7 +208,7 @@ class ISLInferenceEngine:
     def extract_hand_roi(self, frame_bgr, landmarks_list, margin_scale=None):
         """
         Calculates a tight bounding box around detected hands,
-        masks out background/face clutter using a landmark convex hull,
+        masks out background/face clutter using per-hand convex hulls,
         and pads to square with clean black borders (letterboxing).
         Prevents sideways expansion that captures face, hair, and wall plates.
         """
@@ -240,11 +245,13 @@ class ISLInferenceEngine:
         roi = frame_bgr[y1:y2, x1:x2].copy()
         rh, rw = roi.shape[:2]
 
-        # 2. Hand-only convex hull mask to remove any hair/face/wall clutter within the crop
-        rel_pts = pts_arr - [x1, y1]
-        hull = cv2.convexHull(rel_pts)
+        # 2. Hand-only convex hull mask per hand to isolate fingers and eliminate facial clutter
         mask = np.zeros((rh, rw), dtype=np.uint8)
-        cv2.fillConvexPoly(mask, hull, 255)
+        for hand_landmarks in landmarks_list:
+            hand_pts = np.array([[int(lm.x * w) - x1, int(lm.y * h) - y1] for lm in hand_landmarks.landmark], dtype=np.int32)
+            if len(hand_pts) > 0:
+                hull = cv2.convexHull(hand_pts)
+                cv2.fillConvexPoly(mask, hull, 255)
 
         # Dilate slightly so finger boundaries and flesh are preserved
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (15, 15))

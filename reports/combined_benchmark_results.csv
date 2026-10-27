@@ -1,0 +1,7 @@
+Model,Dataset,Accuracy,Precision,Recall,F1_Score,Sample_Count
+Real Camera Model,Real Camera Test Set,90.59,91.52,90.6,90.24,5198
+Real Camera Model,Mendeley Test Set,8.48,7.94,8.21,6.28,4967
+Mendeley Model,Real Camera Test Set,18.68,12.54,13.87,9.92,5198
+Mendeley Model,Mendeley Test Set,94.58,94.85,94.23,94.14,6722
+Combined Model,Real Camera Test Set,91.73,85.63,85.18,84.91,5198
+Combined Model,Mendeley Test Set,98.14,98.06,98.01,98.02,6722
