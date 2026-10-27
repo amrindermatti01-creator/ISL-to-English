@@ -177,7 +177,7 @@ class ISLInferenceEngine:
         print(f"[InferenceEngine] Loading model from: {self.model_path}")
         self.model = tf.keras.models.load_model(str(self.model_path))
 
-        # Initialize MediaPipe Hands
+        # Initialize MediaPipe Hands (Stream mode for webcam/video, Static mode for photo)
         self.mp_hands = mp.solutions.hands
         self.mp_drawing = mp.solutions.drawing_utils
         self.mp_drawing_styles = mp.solutions.drawing_styles
@@ -186,6 +186,11 @@ class ISLInferenceEngine:
             max_num_hands=2,
             min_detection_confidence=0.48,
             min_tracking_confidence=0.45
+        )
+        self.static_hands = self.mp_hands.Hands(
+            static_image_mode=True,
+            max_num_hands=2,
+            min_detection_confidence=0.40
         )
 
         # Temporal smoothing deques
@@ -433,6 +438,127 @@ class ISLInferenceEngine:
         }
         return annotated_frame, prep_preview, result
 
+    def predict_image(self, frame_bgr):
+        """
+        Specialized offline one-shot prediction for static photos.
+        Uses static_image_mode MediaPipe detector for maximal accuracy on independent images.
+        Returns:
+            annotated_frame: Image with skeleton overlays and ROI boxes.
+            prep_preview: 64x64 Canny edge input fed to the CNN.
+            result: Dictionary containing predicted class, confidence, top 3, latency, and status.
+        """
+        t0 = time.time()
+        h, w = frame_bgr.shape[:2]
+        frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+
+        # 1. Detect using static detector first
+        mp_results = self.static_hands.process(frame_rgb)
+        if not mp_results.multi_hand_landmarks:
+            # Fallback to stream detector
+            mp_results = self.hands.process(frame_rgb)
+
+        annotated_frame = frame_bgr.copy()
+        prep_preview = None
+        num_hands = 0
+        top3_classes = []
+
+        if mp_results.multi_hand_landmarks:
+            num_hands = len(mp_results.multi_hand_landmarks)
+            for hand_landmarks in mp_results.multi_hand_landmarks:
+                self.mp_drawing.draw_landmarks(
+                    annotated_frame,
+                    hand_landmarks,
+                    self.mp_hands.HAND_CONNECTIONS,
+                    self.mp_drawing_styles.get_default_hand_landmarks_style(),
+                    self.mp_drawing_styles.get_default_hand_connections_style()
+                )
+
+            roi_bgr, bbox = self.extract_hand_roi(frame_bgr, mp_results.multi_hand_landmarks)
+            if roi_bgr is not None and bbox is not None:
+                x1, y1, x2, y2 = bbox
+                cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 255, 100), 2)
+
+                preprocessed = preprocess_image(
+                    roi_bgr,
+                    target_size=self.target_size,
+                    threshold_value=self.threshold_value,
+                    use_canny=self.use_canny,
+                    canny_low=self.canny_low,
+                    canny_high=self.canny_high,
+                    normalize=True
+                )
+                prep_preview = (preprocessed.squeeze() * 255).astype(np.uint8)
+
+                tensor_input = np.expand_dims(preprocessed, axis=0)
+                raw_predictions = self.model(tensor_input, training=False).numpy()[0]
+
+                top3_idx = np.argsort(raw_predictions)[::-1][:3]
+                top3_classes = [
+                    {"class": self.idx_to_class.get(int(i), "?"), "prob": float(raw_predictions[i])}
+                    for i in top3_idx
+                ]
+
+                best_idx = int(top3_idx[0])
+                pred_class = self.idx_to_class.get(best_idx, "Unknown")
+                conf = float(raw_predictions[best_idx])
+                is_reliable = (conf >= self.confidence_threshold)
+            else:
+                pred_class = "Bounding box failed"
+                conf = 0.0
+                is_reliable = False
+        else:
+            # Central crop fallback if hands are not recognized by MediaPipe (e.g. cropped dataset photo)
+            box_side = min(h, w, 280)
+            x1 = (w - box_side) // 2
+            y1 = (h - box_side) // 2
+            roi_bgr = frame_bgr[y1:y1 + box_side, x1:x1 + box_side]
+
+            preprocessed = preprocess_image(
+                roi_bgr,
+                target_size=self.target_size,
+                threshold_value=self.threshold_value,
+                use_canny=self.use_canny,
+                canny_low=self.canny_low,
+                canny_high=self.canny_high,
+                normalize=True
+            )
+            prep_preview = (preprocessed.squeeze() * 255).astype(np.uint8)
+            tensor_input = np.expand_dims(preprocessed, axis=0)
+            raw_predictions = self.model(tensor_input, training=False).numpy()[0]
+            top3_idx = np.argsort(raw_predictions)[::-1][:3]
+            top3_classes = [
+                {"class": self.idx_to_class.get(int(i), "?"), "prob": float(raw_predictions[i])}
+                for i in top3_idx
+            ]
+            best_idx = int(top3_idx[0])
+            pred_class = self.idx_to_class.get(best_idx, "Unknown")
+            conf = float(raw_predictions[best_idx])
+            is_reliable = (conf >= self.confidence_threshold)
+            cv2.rectangle(annotated_frame, (x1, y1), (x1 + box_side, y1 + box_side), (255, 165, 0), 2)
+            cv2.putText(annotated_frame, "Center-crop fallback (No MP Landmarks)", (x1, max(20, y1 - 8)),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 165, 0), 1, cv2.LINE_AA)
+
+        latency = (time.time() - t0) * 1000.0
+
+        if num_hands == 1:
+            hand_mode = "Single-Hand Gesture"
+        elif num_hands >= 2:
+            hand_mode = "Dual-Hand Gesture"
+        else:
+            hand_mode = "Fallback Center-Crop"
+
+        result = {
+            "predicted_class": pred_class if is_reliable else f"{pred_class} (Low Conf)",
+            "sign": pred_class,
+            "confidence": round(conf, 4),
+            "is_reliable": is_reliable,
+            "latency_ms": round(latency, 1),
+            "top3": top3_classes,
+            "num_hands": num_hands,
+            "hand_mode": hand_mode
+        }
+        return annotated_frame, prep_preview, result
+
     def save_accurate_snapshot(
         self,
         frame_bgr=None,
@@ -542,13 +668,21 @@ class ISLInferenceEngine:
         if self.spelled_text:
             self.spelled_text = self.spelled_text[:-1]
 
-    def clear_text(self):
-        self.spelled_text = ""
+    def reset_smoothing(self):
+        """Resets temporal smoothing queues and stability timers without clearing spelled text."""
         self.last_predicted_char = None
         self.char_hold_start_time = None
         self.char_already_added = False
         self.prob_buffer.clear()
+        self.prediction_buffer.clear()
+        self.confidence_buffer.clear()
+
+    def clear_text(self):
+        self.spelled_text = ""
+        self.reset_smoothing()
 
     def release(self):
         if hasattr(self, "hands") and self.hands:
             self.hands.close()
+        if hasattr(self, "static_hands") and self.static_hands:
+            self.static_hands.close()

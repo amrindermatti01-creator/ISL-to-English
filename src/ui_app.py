@@ -1,25 +1,26 @@
 """
-src/ui_app.py - Desktop GUI Application for Indian Sign Language (ISL) Recognition
+src/ui_app.py - Multi-Modal Indian Sign Language (ISL) Recognition Platform
 
-Stage 6 Deliverable:
-  - Tkinter-based interactive desktop graphical interface
-  - Live webcam canvas with MediaPipe skeleton & dynamic ROI overlays
-  - Live Picture-in-Picture (PiP) inset of the 64x64 Canny edge CNN input
-  - Real-time prediction card with confidence meter, latency, and FPS metrics
-  - Rejection of uncertain predictions ("No reliable sign detected")
-  - Fingerspelling text buffer with stability timer progress bar
-  - Dedicated controls: Start/Stop, Camera selector, Space, Backspace, Clear, Copy, Snapshot
-  - Clean error handling and graceful shutdown
+Features:
+  - Obsidian Slate & Electric Cyan modern professional design system
+  - 3 Dedicated Modes:
+      1. 📹 Live Webcam (Real-time live streaming & hold-stability fingerspelling)
+      2. 📸 Photo Mode (One-shot letter/digit classification with MediaPipe skeleton & Canny ROI)
+      3. 🎥 Video Mode (Video file playback, timeline scrubbing, and continuous word assembly)
+  - Picture-in-Picture (PiP) 64x64 Canny edge inset
+  - Live prediction card with confidence meter, latency, and Top-3 distribution
+  - Shared fingerspelling text buffer with Space, Backspace, Clear, and Copy controls
+  - Full-screen snapshot and auto-capture verification
 """
 
 import os
 import sys
 import time
 import json
-import tkinter as tk
-from tkinter import ttk, messagebox
-from pathlib import Path
 import threading
+from pathlib import Path
+import tkinter as tk
+from tkinter import ttk, messagebox, filedialog
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
@@ -33,64 +34,109 @@ from src.inference import ISLInferenceEngine
 from src.preprocessing import preprocess_image
 
 
-class ISLDesktopApp:
+# Visual Design System Theme Tokens
+THEME = {
+    "bg_dark": "#0B0F19",
+    "bg_card": "#131B2E",
+    "bg_inner": "#1B253B",
+    "border": "#23304B",
+    "cyan": "#00E5FF",
+    "indigo": "#6366F1",
+    "emerald": "#10B981",
+    "amber": "#F59E0B",
+    "rose": "#F43F5E",
+    "text_white": "#F8FAFC",
+    "text_muted": "#94A3B8"
+}
+
+
+class ISLMultiModalApp:
     def __init__(self, root: tk.Tk):
         self.root = root
-        self.root.title("Indian Sign Language (ISL) Recognition System")
-        self.root.geometry("1120x760")
-        self.root.minsize(980, 680)
-        self.root.configure(bg="#12151b")
+        self.root.title("Indian Sign Language (ISL) Multi-Modal AI Recognition Platform")
+        self.root.geometry("1200x820")
+        self.root.minsize(1040, 720)
+        self.root.configure(bg=THEME["bg_dark"])
 
         # Core State
-        self.cap = None
-        self.is_running = False
-        self.camera_idx = 0
         self.engine = None
+        self.current_mode = "webcam"  # 'webcam' | 'photo' | 'video'
         self.use_fixed_roi = False
         self.snapshots_dir = Path("reports/snapshots")
         self.snapshots_dir.mkdir(parents=True, exist_ok=True)
 
-        # Performance Tracking
-        self.last_frame_time = time.time()
+        # Webcam State
+        self.cap = None
+        self.is_webcam_running = False
+        self.camera_idx = 0
+
+        # Video File State
+        self.video_cap = None
+        self.is_video_playing = False
+        self.video_path = None
+        self.video_total_frames = 0
+        self.video_fps = 30.0
+        self.video_cur_frame = 0
+        self.video_scrubbing = False
+
+        # Photo State
+        self.photo_path = None
+        self.photo_original_bgr = None
+
+        # Performance & Render State
         self.fps = 0.0
+        self.last_frame_time = time.time()
+        self.last_annotated = None
+        self.last_prep = None
+        self.last_result = None
 
-        # Styles
+        # Setup Styling & Layout
         self.setup_styles()
-
-        # Build UI Layout
         self.build_header()
+        self.build_mode_selector()
         self.build_main_content()
         self.build_status_bar()
 
         # Handle window close
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
-        # Initialize Inference Engine asynchronously to avoid blocking UI startup
+        # Initialize Inference Engine asynchronously
         self.init_engine_thread()
 
     def setup_styles(self):
         self.style = ttk.Style()
         self.style.theme_use("clam")
 
-        # Configure custom modern dark styles
-        self.style.configure(".", background="#12151b", foreground="#e2e8f0", font=("Segoe UI", 10))
-        self.style.configure("TFrame", background="#12151b")
-        self.style.configure("Card.TFrame", background="#1a202c", relief="flat")
-        self.style.configure("InnerCard.TFrame", background="#222b3a")
+        # Global base styles
+        self.style.configure(".", background=THEME["bg_dark"], foreground=THEME["text_white"], font=("Segoe UI", 10))
+        self.style.configure("TFrame", background=THEME["bg_dark"])
+        self.style.configure("Card.TFrame", background=THEME["bg_card"])
+        self.style.configure("InnerCard.TFrame", background=THEME["bg_inner"])
 
+        # Buttons
         self.style.configure(
             "Primary.TButton",
-            background="#00b4d8",
+            background=THEME["cyan"],
             foreground="#000000",
             font=("Segoe UI", 10, "bold"),
             borderwidth=0,
             padding=6
         )
-        self.style.map("Primary.TButton", background=[("active", "#90e0ef")])
+        self.style.map("Primary.TButton", background=[("active", "#70efff")])
+
+        self.style.configure(
+            "Indigo.TButton",
+            background=THEME["indigo"],
+            foreground="#ffffff",
+            font=("Segoe UI", 10, "bold"),
+            borderwidth=0,
+            padding=6
+        )
+        self.style.map("Indigo.TButton", background=[("active", "#818cf8")])
 
         self.style.configure(
             "Success.TButton",
-            background="#10b981",
+            background=THEME["emerald"],
             foreground="#000000",
             font=("Segoe UI", 10, "bold"),
             borderwidth=0,
@@ -100,90 +146,260 @@ class ISLDesktopApp:
 
         self.style.configure(
             "Danger.TButton",
-            background="#ef4444",
+            background=THEME["rose"],
             foreground="#ffffff",
             font=("Segoe UI", 10, "bold"),
             borderwidth=0,
             padding=6
         )
-        self.style.map("Danger.TButton", background=[("active", "#f87171")])
+        self.style.map("Danger.TButton", background=[("active", "#fb7185")])
 
         self.style.configure(
             "Action.TButton",
-            background="#334155",
-            foreground="#ffffff",
-            font=("Segoe UI", 10),
-            borderwidth=0,
+            background=THEME["bg_inner"],
+            foreground=THEME["text_white"],
+            font=("Segoe UI", 9, "bold"),
+            borderwidth=1,
+            relief="solid",
             padding=5
         )
-        self.style.map("Action.TButton", background=[("active", "#475569")])
+        self.style.map("Action.TButton", background=[("active", "#2a3754")])
 
-        # Sliders
-        self.style.configure("Horizontal.TScale", background="#1a202c", troughcolor="#334155")
-        # Progressbar
-        self.style.configure("Hold.Horizontal.TProgressbar", background="#00e5ff", troughcolor="#334155")
+        # Progress bars and scales
+        self.style.configure("Horizontal.TScale", background=THEME["bg_card"], troughcolor=THEME["border"])
+        self.style.configure("Hold.Horizontal.TProgressbar", background=THEME["cyan"], troughcolor=THEME["border"])
+        self.style.configure("Video.Horizontal.TScale", background=THEME["bg_card"], troughcolor=THEME["border"])
 
     def build_header(self):
-        header = tk.Frame(self.root, bg="#1a202c", height=60)
+        header = tk.Frame(self.root, bg=THEME["bg_card"], height=64)
         header.pack(fill=tk.X, side=tk.TOP)
 
+        title_box = tk.Frame(header, bg=THEME["bg_card"])
+        title_box.pack(side=tk.LEFT, padx=20, pady=10)
+
         title_lbl = tk.Label(
-            header,
-            text="INDIAN SIGN LANGUAGE (ISL) REAL-TIME DETECTOR",
-            font=("Segoe UI", 14, "bold"),
-            fg="#00e5ff",
-            bg="#1a202c"
+            title_box,
+            text="INDIAN SIGN LANGUAGE (ISL) MULTI-MODAL RECOGNITION",
+            font=("Segoe UI Variable Display", 13, "bold"),
+            fg=THEME["cyan"],
+            bg=THEME["bg_card"]
         )
-        title_lbl.pack(side=tk.LEFT, padx=20, pady=12)
+        title_lbl.pack(anchor=tk.W)
 
         self.subtitle_lbl = tk.Label(
-            header,
-            text="26 Alphabet Classes (A–Z) | MediaPipe Vision + CNN",
-            font=("Segoe UI", 10),
-            fg="#94a3b8",
-            bg="#1a202c"
+            title_box,
+            text="Unified Live Webcam • High-Res Photo • Video Fingerspelling",
+            font=("Segoe UI", 9),
+            fg=THEME["text_muted"],
+            bg=THEME["bg_card"]
         )
-        self.subtitle_lbl.pack(side=tk.LEFT, padx=5, pady=14)
+        self.subtitle_lbl.pack(anchor=tk.W)
 
         # Right side status indicator
         self.engine_status_lbl = tk.Label(
             header,
-            text="● Loading Neural Network...",
+            text="● Initializing Deep Neural Network...",
             font=("Segoe UI", 10, "bold"),
-            fg="#fbbf24",
-            bg="#1a202c"
+            fg=THEME["amber"],
+            bg=THEME["bg_card"]
         )
         self.engine_status_lbl.pack(side=tk.RIGHT, padx=20)
 
-    def build_main_content(self):
-        container = tk.Frame(self.root, bg="#12151b")
-        container.pack(fill=tk.BOTH, expand=True, padx=16, pady=12)
+    def build_mode_selector(self):
+        """Builds the top segmented switcher for Webcam, Photo, and Video modes."""
+        selector_bar = tk.Frame(self.root, bg=THEME["bg_dark"], height=48)
+        selector_bar.pack(fill=tk.X, padx=16, pady=(8, 4))
 
-        # Left Column: Video Feed & Fingerspelling Box
-        left_col = tk.Frame(container, bg="#12151b")
+        tk.Label(
+            selector_bar,
+            text="INPUT MODE:",
+            font=("Segoe UI", 9, "bold"),
+            fg=THEME["text_muted"],
+            bg=THEME["bg_dark"]
+        ).pack(side=tk.LEFT, padx=(4, 12))
+
+        # Button container with pill border look
+        pill_frame = tk.Frame(selector_bar, bg=THEME["bg_card"], bd=1, relief="solid")
+        pill_frame.pack(side=tk.LEFT)
+
+        self.btn_mode_webcam = tk.Button(
+            pill_frame,
+            text="📹  Live Webcam",
+            font=("Segoe UI", 10, "bold"),
+            bg=THEME["cyan"],
+            fg="#000000",
+            activebackground=THEME["cyan"],
+            activeforeground="#000000",
+            relief="flat",
+            bd=0,
+            padx=16,
+            pady=6,
+            cursor="hand2",
+            command=lambda: self.switch_mode("webcam")
+        )
+        self.btn_mode_webcam.pack(side=tk.LEFT)
+
+        self.btn_mode_photo = tk.Button(
+            pill_frame,
+            text="📸  Photo Mode (Letter/Sign)",
+            font=("Segoe UI", 10),
+            bg=THEME["bg_card"],
+            fg=THEME["text_muted"],
+            activebackground=THEME["bg_inner"],
+            activeforeground=THEME["text_white"],
+            relief="flat",
+            bd=0,
+            padx=16,
+            pady=6,
+            cursor="hand2",
+            command=lambda: self.switch_mode("photo")
+        )
+        self.btn_mode_photo.pack(side=tk.LEFT)
+
+        self.btn_mode_video = tk.Button(
+            pill_frame,
+            text="🎥  Video Mode (Word/Sentence)",
+            font=("Segoe UI", 10),
+            bg=THEME["bg_card"],
+            fg=THEME["text_muted"],
+            activebackground=THEME["bg_inner"],
+            activeforeground=THEME["text_white"],
+            relief="flat",
+            bd=0,
+            padx=16,
+            pady=6,
+            cursor="hand2",
+            command=lambda: self.switch_mode("video")
+        )
+        self.btn_mode_video.pack(side=tk.LEFT)
+
+        # Mode explanation tip
+        self.mode_tip_lbl = tk.Label(
+            selector_bar,
+            text="Continuous real-time fingerspelling recognition with stability timer.",
+            font=("Segoe UI", 9, "italic"),
+            fg=THEME["text_muted"],
+            bg=THEME["bg_dark"]
+        )
+        self.mode_tip_lbl.pack(side=tk.LEFT, padx=16)
+
+    def switch_mode(self, new_mode: str):
+        """Switches UI view between Webcam, Photo, and Video modes."""
+        if self.current_mode == new_mode:
+            return
+
+        # Stop any active streaming
+        if self.is_webcam_running:
+            self.stop_webcam()
+        if self.is_video_playing:
+            self.pause_video()
+
+        self.current_mode = new_mode
+
+        # Update button visual styling
+        for mode, btn in [
+            ("webcam", self.btn_mode_webcam),
+            ("photo", self.btn_mode_photo),
+            ("video", self.btn_mode_video)
+        ]:
+            if mode == new_mode:
+                btn.configure(bg=THEME["cyan"], fg="#000000", font=("Segoe UI", 10, "bold"))
+            else:
+                btn.configure(bg=THEME["bg_card"], fg=THEME["text_muted"], font=("Segoe UI", 10))
+
+        # Update Mode Tip
+        if new_mode == "webcam":
+            self.mode_tip_lbl.configure(text="Live camera feed: Hold sign ~1.0s to accumulate fingerspelled letters.")
+            self.webcam_ctrl_frame.pack(fill=tk.X, pady=(0, 10))
+            self.photo_ctrl_frame.pack_forget()
+            self.video_ctrl_frame.pack_forget()
+            self.video_playback_bar.pack_forget()
+        elif new_mode == "photo":
+            self.mode_tip_lbl.configure(text="Upload static image (.jpg, .png): Instant offline classification.")
+            self.webcam_ctrl_frame.pack_forget()
+            self.photo_ctrl_frame.pack(fill=tk.X, pady=(0, 10))
+            self.video_ctrl_frame.pack_forget()
+            self.video_playback_bar.pack_forget()
+        elif new_mode == "video":
+            self.mode_tip_lbl.configure(text="Upload video recording (.mp4, .avi): Track sign sequence and construct full words.")
+            self.webcam_ctrl_frame.pack_forget()
+            self.photo_ctrl_frame.pack_forget()
+            self.video_ctrl_frame.pack(fill=tk.X, pady=(0, 10))
+            self.video_playback_bar.pack(fill=tk.X, pady=(6, 0))
+
+        # Clear canvas
+        self.canvas.delete("all")
+        self.pip_canvas.delete("all")
+        self.pred_badge_lbl.configure(text="Ready in " + new_mode.capitalize() + " Mode", fg=THEME["text_muted"])
+        self.conf_badge_lbl.configure(text="Confidence: —")
+        self.status_msg_lbl.configure(text=f"Switched to {new_mode.upper()} mode. Select input or start feed.")
+
+    def build_main_content(self):
+        container = tk.Frame(self.root, bg=THEME["bg_dark"])
+        container.pack(fill=tk.BOTH, expand=True, padx=16, pady=(4, 10))
+
+        # ----------------- LEFT COLUMN: Canvas & Text Accumulator -----------------
+        left_col = tk.Frame(container, bg=THEME["bg_dark"])
         left_col.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 12))
 
-        # Video Canvas Card
-        video_card = tk.Frame(left_col, bg="#1a202c", bd=1, relief="solid")
-        video_card.pack(fill=tk.BOTH, expand=True)
+        # Video / Photo Canvas Card
+        viewport_card = tk.Frame(left_col, bg=THEME["bg_card"], bd=1, relief="solid")
+        viewport_card.pack(fill=tk.BOTH, expand=True)
 
-        self.canvas = tk.Canvas(video_card, bg="#0d1117", highlightthickness=0)
+        self.canvas = tk.Canvas(viewport_card, bg="#080C14", highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
         self.canvas.bind("<Configure>", self.on_canvas_resize)
 
-        # Fingerspelling Output Card (Below video)
-        text_card = tk.Frame(left_col, bg="#1a202c", height=120)
+        # Video Playback Bar (Hidden unless in Video mode)
+        self.video_playback_bar = tk.Frame(viewport_card, bg=THEME["bg_card"])
+        # (Will be packed when in video mode)
+
+        self.video_slider_var = tk.DoubleVar(value=0.0)
+        self.video_slider = ttk.Scale(
+            self.video_playback_bar,
+            from_=0,
+            to=100,
+            orient=tk.HORIZONTAL,
+            variable=self.video_slider_var,
+            style="Video.Horizontal.TScale",
+            command=self.on_video_seek
+        )
+        self.video_slider.pack(fill=tk.X, padx=12, pady=(4, 2))
+
+        vid_btn_row = tk.Frame(self.video_playback_bar, bg=THEME["bg_card"])
+        vid_btn_row.pack(fill=tk.X, padx=12, pady=(2, 6))
+
+        self.btn_vid_rewind = ttk.Button(vid_btn_row, text="⏮ Rewind", style="Action.TButton", command=self.rewind_video)
+        self.btn_vid_rewind.pack(side=tk.LEFT, padx=(0, 4))
+
+        self.btn_vid_play = ttk.Button(vid_btn_row, text="▶ Play", style="Success.TButton", command=self.toggle_video_playback)
+        self.btn_vid_play.pack(side=tk.LEFT, padx=4)
+
+        self.btn_vid_stop = ttk.Button(vid_btn_row, text="⏹ Stop", style="Action.TButton", command=self.stop_video)
+        self.btn_vid_stop.pack(side=tk.LEFT, padx=4)
+
+        self.vid_time_lbl = tk.Label(
+            vid_btn_row,
+            text="00:00 / 00:00  (Frame 0/0)",
+            font=("Consolas", 9),
+            fg=THEME["text_muted"],
+            bg=THEME["bg_card"]
+        )
+        self.vid_time_lbl.pack(side=tk.RIGHT, padx=6)
+
+        # Fingerspelling Output Card (Below Canvas)
+        text_card = tk.Frame(left_col, bg=THEME["bg_card"], height=125, bd=1, relief="solid")
         text_card.pack(fill=tk.X, pady=(10, 0))
 
-        text_title_row = tk.Frame(text_card, bg="#1a202c")
-        text_title_row.pack(fill=tk.X, padx=12, pady=(8, 2))
+        text_title_row = tk.Frame(text_card, bg=THEME["bg_card"])
+        text_title_row.pack(fill=tk.X, padx=14, pady=(8, 2))
 
         tk.Label(
             text_title_row,
-            text="FINGERSPELLED TEXT BUFFER",
+            text="ASSEMBLED WORD / FINGERSPELLED TEXT BUFFER",
             font=("Segoe UI", 9, "bold"),
-            fg="#94a3b8",
-            bg="#1a202c"
+            fg=THEME["text_muted"],
+            bg=THEME["bg_card"]
         ).pack(side=tk.LEFT)
 
         # Stability hold progress bar
@@ -200,50 +416,50 @@ class ISLDesktopApp:
         self.hold_lbl = tk.Label(
             text_title_row,
             text="Hold: 0%",
-            font=("Segoe UI", 8),
-            fg="#94a3b8",
-            bg="#1a202c"
+            font=("Consolas", 8),
+            fg=THEME["text_muted"],
+            bg=THEME["bg_card"]
         )
-        self.hold_lbl.pack(side=tk.RIGHT, padx=(0, 6))
+        self.hold_lbl.pack(side=tk.RIGHT, padx=(0, 8))
 
         # Text display entry
         self.text_entry = tk.Entry(
             text_card,
-            font=("Consolas", 15, "bold"),
-            bg="#0f172a",
-            fg="#f8fafc",
-            insertbackground="#00e5ff",
+            font=("Consolas", 16, "bold"),
+            bg="#080C14",
+            fg=THEME["text_white"],
+            insertbackground=THEME["cyan"],
             relief="flat",
             bd=6
         )
-        self.text_entry.pack(fill=tk.X, padx=12, pady=4)
+        self.text_entry.pack(fill=tk.X, padx=14, pady=4)
 
         # Text action buttons
-        btn_row = tk.Frame(text_card, bg="#1a202c")
-        btn_row.pack(fill=tk.X, padx=12, pady=(2, 8))
+        btn_row = tk.Frame(text_card, bg=THEME["bg_card"])
+        btn_row.pack(fill=tk.X, padx=14, pady=(2, 8))
 
-        ttk.Button(btn_row, text="[ Space ]", style="Action.TButton", command=self.action_space).pack(side=tk.LEFT, padx=(0, 6))
-        ttk.Button(btn_row, text="[ Backspace ]", style="Action.TButton", command=self.action_backspace).pack(side=tk.LEFT, padx=6)
-        ttk.Button(btn_row, text="[ Clear ]", style="Action.TButton", command=self.action_clear).pack(side=tk.LEFT, padx=6)
-        ttk.Button(btn_row, text="[ Copy Text ]", style="Action.TButton", command=self.action_copy).pack(side=tk.LEFT, padx=6)
+        ttk.Button(btn_row, text="[ ␣ Space ]", style="Action.TButton", command=self.action_space).pack(side=tk.LEFT, padx=(0, 6))
+        ttk.Button(btn_row, text="[ ⌫ Backspace ]", style="Action.TButton", command=self.action_backspace).pack(side=tk.LEFT, padx=6)
+        ttk.Button(btn_row, text="[ 🗑 Clear Buffer ]", style="Action.TButton", command=self.action_clear).pack(side=tk.LEFT, padx=6)
+        ttk.Button(btn_row, text="[ 📋 Copy Text ]", style="Action.TButton", command=self.action_copy).pack(side=tk.LEFT, padx=6)
 
-        # Right Column: Controls & Real-Time Stats
-        right_col = tk.Frame(container, bg="#1a202c", width=340)
+        # ----------------- RIGHT COLUMN: Cards & Controls -----------------
+        right_col = tk.Frame(container, bg=THEME["bg_card"], width=350, bd=1, relief="solid")
         right_col.pack(side=tk.RIGHT, fill=tk.Y, padx=(4, 0))
         right_col.pack_propagate(False)
 
         # 1. Prediction Badge Card
-        pred_card = tk.Frame(right_col, bg="#222b3a", bd=1, relief="solid")
+        pred_card = tk.Frame(right_col, bg=THEME["bg_inner"], bd=1, relief="solid")
         pred_card.pack(fill=tk.X, padx=12, pady=12)
 
-        tk.Label(pred_card, text="PREDICTED SIGN", font=("Segoe UI", 9, "bold"), fg="#94a3b8", bg="#222b3a").pack(pady=(8, 2))
+        tk.Label(pred_card, text="PREDICTED SIGN / CHARACTER", font=("Segoe UI", 9, "bold"), fg=THEME["text_muted"], bg=THEME["bg_inner"]).pack(pady=(8, 2))
 
         self.pred_badge_lbl = tk.Label(
             pred_card,
             text="No Sign Detected",
-            font=("Segoe UI", 20, "bold"),
-            fg="#fbbf24",
-            bg="#222b3a"
+            font=("Segoe UI Variable Display", 22, "bold"),
+            fg=THEME["amber"],
+            bg=THEME["bg_inner"]
         )
         self.pred_badge_lbl.pack(pady=4)
 
@@ -251,8 +467,8 @@ class ISLDesktopApp:
             pred_card,
             text="Confidence: 0.0%",
             font=("Segoe UI", 10),
-            fg="#94a3b8",
-            bg="#222b3a"
+            fg=THEME["text_muted"],
+            bg=THEME["bg_inner"]
         )
         self.conf_badge_lbl.pack(pady=(0, 2))
 
@@ -260,8 +476,8 @@ class ISLDesktopApp:
             pred_card,
             text="Mode: No Hands in View",
             font=("Segoe UI", 8),
-            fg="#38bdf8",
-            bg="#222b3a"
+            fg=THEME["cyan"],
+            bg=THEME["bg_inner"]
         )
         self.hand_mode_lbl.pack(pady=(0, 4))
 
@@ -269,131 +485,169 @@ class ISLDesktopApp:
             pred_card,
             text="Top 3: —",
             font=("Consolas", 9, "bold"),
-            fg="#cbd5e1",
-            bg="#222b3a"
+            fg=THEME["text_white"],
+            bg=THEME["bg_inner"]
         )
         self.top3_lbl.pack(pady=(0, 8))
 
         # 2. PiP Preview of Canny Preprocessed 64x64 input
-        pip_card = tk.Frame(right_col, bg="#222b3a", bd=1, relief="solid")
-        pip_card.pack(fill=tk.X, padx=12, pady=(0, 12))
+        pip_card = tk.Frame(right_col, bg=THEME["bg_inner"], bd=1, relief="solid")
+        pip_card.pack(fill=tk.X, padx=12, pady=(0, 10))
 
-        tk.Label(pip_card, text="CNN INPUT PREVIEW (64x64 Canny)", font=("Segoe UI", 9, "bold"), fg="#94a3b8", bg="#222b3a").pack(pady=(8, 4))
+        tk.Label(pip_card, text="CNN INPUT RADAR (64x64 Canny Edge)", font=("Segoe UI", 9, "bold"), fg=THEME["text_muted"], bg=THEME["bg_inner"]).pack(pady=(8, 4))
 
-        self.pip_canvas = tk.Canvas(pip_card, width=128, height=128, bg="#0d1117", highlightthickness=1, highlightbackground="#334155")
+        self.pip_canvas = tk.Canvas(pip_card, width=128, height=128, bg="#080C14", highlightthickness=1, highlightbackground=THEME["border"])
         self.pip_canvas.pack(pady=(0, 8))
 
-        # 3. Hardware & Stream Controls Card
-        ctrl_card = tk.Frame(right_col, bg="#222b3a", bd=1, relief="solid")
-        ctrl_card.pack(fill=tk.X, padx=12, pady=(0, 12))
+        # 3. Dynamic Mode Controls Container
+        self.controls_container = tk.Frame(right_col, bg=THEME["bg_card"])
+        self.controls_container.pack(fill=tk.X, padx=12, pady=(0, 8))
 
-        tk.Label(ctrl_card, text="STREAM CONTROLS", font=("Segoe UI", 9, "bold"), fg="#94a3b8", bg="#222b3a").pack(pady=(8, 6))
+        # -- A. WEBCAM CONTROLS FRAME --
+        self.webcam_ctrl_frame = tk.Frame(self.controls_container, bg=THEME["bg_inner"], bd=1, relief="solid")
+        self.webcam_ctrl_frame.pack(fill=tk.X, pady=(0, 10))
 
-        cam_row = tk.Frame(ctrl_card, bg="#222b3a")
+        tk.Label(self.webcam_ctrl_frame, text="LIVE WEBCAM CONTROLS", font=("Segoe UI", 9, "bold"), fg=THEME["cyan"], bg=THEME["bg_inner"]).pack(pady=(8, 4))
+
+        cam_row = tk.Frame(self.webcam_ctrl_frame, bg=THEME["bg_inner"])
         cam_row.pack(fill=tk.X, padx=12, pady=4)
-        tk.Label(cam_row, text="Camera Index:", font=("Segoe UI", 9), fg="#e2e8f0", bg="#222b3a").pack(side=tk.LEFT)
+        tk.Label(cam_row, text="Camera Index:", font=("Segoe UI", 9), fg=THEME["text_white"], bg=THEME["bg_inner"]).pack(side=tk.LEFT)
         self.cam_spin = ttk.Spinbox(cam_row, from_=0, to=3, width=4)
         self.cam_spin.set(0)
         self.cam_spin.pack(side=tk.RIGHT)
 
-        btn_stream_row = tk.Frame(ctrl_card, bg="#222b3a")
+        btn_stream_row = tk.Frame(self.webcam_ctrl_frame, bg=THEME["bg_inner"])
         btn_stream_row.pack(fill=tk.X, padx=12, pady=8)
 
-        self.btn_toggle_cam = ttk.Button(btn_stream_row, text="▶ Start Webcam", style="Success.TButton", command=self.toggle_camera)
+        self.btn_toggle_cam = ttk.Button(btn_stream_row, text="▶ Start Webcam", style="Success.TButton", command=self.toggle_webcam)
         self.btn_toggle_cam.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 4))
 
         self.btn_snapshot = ttk.Button(btn_stream_row, text="📷 Snapshot", style="Action.TButton", command=self.take_snapshot)
         self.btn_snapshot.pack(side=tk.RIGHT, padx=(4, 0))
 
-        # Auto-Capture on Sign Result Checkbox
         self.auto_capture_var = tk.BooleanVar(value=True)
         self.auto_capture_chk = ttk.Checkbutton(
-            ctrl_card,
+            self.webcam_ctrl_frame,
             text="📸 Auto-Capture on Sign Result",
             variable=self.auto_capture_var
         )
         self.auto_capture_chk.pack(anchor=tk.W, padx=14, pady=(2, 6))
 
+        # -- B. PHOTO CONTROLS FRAME (Initially unmapped) --
+        self.photo_ctrl_frame = tk.Frame(self.controls_container, bg=THEME["bg_inner"], bd=1, relief="solid")
+
+        tk.Label(self.photo_ctrl_frame, text="PHOTO RECOGNITION (OFFLINE)", font=("Segoe UI", 9, "bold"), fg=THEME["cyan"], bg=THEME["bg_inner"]).pack(pady=(8, 4))
+
+        self.photo_file_lbl = tk.Label(
+            self.photo_ctrl_frame,
+            text="No image loaded",
+            font=("Segoe UI", 8),
+            fg=THEME["text_muted"],
+            bg=THEME["bg_inner"],
+            wraplength=300
+        )
+        self.photo_file_lbl.pack(padx=12, pady=(0, 6))
+
+        btn_photo_row = tk.Frame(self.photo_ctrl_frame, bg=THEME["bg_inner"])
+        btn_photo_row.pack(fill=tk.X, padx=12, pady=4)
+
+        ttk.Button(btn_photo_row, text="📂 Choose Photo...", style="Primary.TButton", command=self.browse_photo).pack(fill=tk.X, pady=2)
+        ttk.Button(btn_photo_row, text="➕ Append Sign to Buffer", style="Action.TButton", command=self.append_photo_sign).pack(fill=tk.X, pady=(4, 8))
+
+        # -- C. VIDEO CONTROLS FRAME (Initially unmapped) --
+        self.video_ctrl_frame = tk.Frame(self.controls_container, bg=THEME["bg_inner"], bd=1, relief="solid")
+
+        tk.Label(self.video_ctrl_frame, text="VIDEO STREAM CONTROLS", font=("Segoe UI", 9, "bold"), fg=THEME["cyan"], bg=THEME["bg_inner"]).pack(pady=(8, 4))
+
+        self.video_file_lbl = tk.Label(
+            self.video_ctrl_frame,
+            text="No video loaded",
+            font=("Segoe UI", 8),
+            fg=THEME["text_muted"],
+            bg=THEME["bg_inner"],
+            wraplength=300
+        )
+        self.video_file_lbl.pack(padx=12, pady=(0, 6))
+
+        ttk.Button(self.video_ctrl_frame, text="📂 Choose Video File...", style="Indigo.TButton", command=self.browse_video).pack(fill=tk.X, padx=12, pady=(2, 6))
+
         # 4. Settings & Gating Parameters
-        param_card = tk.Frame(right_col, bg="#222b3a", bd=1, relief="solid")
-        param_card.pack(fill=tk.X, padx=12, pady=(0, 12))
+        param_card = tk.Frame(right_col, bg=THEME["bg_inner"], bd=1, relief="solid")
+        param_card.pack(fill=tk.X, padx=12, pady=(0, 8))
 
-        tk.Label(param_card, text="DETECTION PARAMETERS", font=("Segoe UI", 9, "bold"), fg="#94a3b8", bg="#222b3a").pack(pady=(8, 4))
+        tk.Label(param_card, text="DETECTION TUNING", font=("Segoe UI", 9, "bold"), fg=THEME["text_muted"], bg=THEME["bg_inner"]).pack(pady=(8, 4))
 
-        # Confidence Threshold Slider
-        thresh_row = tk.Frame(param_card, bg="#222b3a")
+        thresh_row = tk.Frame(param_card, bg=THEME["bg_inner"])
         thresh_row.pack(fill=tk.X, padx=12, pady=2)
-        self.thresh_lbl = tk.Label(thresh_row, text="Confidence Gate: 55%", font=("Segoe UI", 9), fg="#e2e8f0", bg="#222b3a")
+        self.thresh_lbl = tk.Label(thresh_row, text="Confidence Gate: 55%", font=("Segoe UI", 8), fg=THEME["text_white"], bg=THEME["bg_inner"])
         self.thresh_lbl.pack(side=tk.LEFT)
 
         self.thresh_slider = ttk.Scale(param_card, from_=35, to=95, value=55, command=self.on_thresh_change)
         self.thresh_slider.pack(fill=tk.X, padx=12, pady=(0, 6))
 
-        # Stability Hold Duration Slider
-        hold_row = tk.Frame(param_card, bg="#222b3a")
+        hold_row = tk.Frame(param_card, bg=THEME["bg_inner"])
         hold_row.pack(fill=tk.X, padx=12, pady=2)
-        self.hold_dur_lbl = tk.Label(hold_row, text="Hold Duration: 1.0s", font=("Segoe UI", 9), fg="#e2e8f0", bg="#222b3a")
+        self.hold_dur_lbl = tk.Label(hold_row, text="Hold Duration: 1.0s", font=("Segoe UI", 8), fg=THEME["text_white"], bg=THEME["bg_inner"])
         self.hold_dur_lbl.pack(side=tk.LEFT)
 
         self.hold_slider = ttk.Scale(param_card, from_=5, to=25, value=10, command=self.on_hold_dur_change)
         self.hold_slider.pack(fill=tk.X, padx=12, pady=(0, 6))
 
         # Tracking Mode Toggle
-        mode_row = tk.Frame(param_card, bg="#222b3a")
-        mode_row.pack(fill=tk.X, padx=12, pady=(2, 10))
+        mode_row = tk.Frame(param_card, bg=THEME["bg_inner"])
+        mode_row.pack(fill=tk.X, padx=12, pady=(2, 8))
         self.mode_var = tk.StringVar(value="dynamic")
-        ttk.Radiobutton(mode_row, text="MediaPipe Tracking", variable=self.mode_var, value="dynamic", command=self.on_mode_change).pack(side=tk.LEFT)
-        ttk.Radiobutton(mode_row, text="Fixed Box", variable=self.mode_var, value="fixed", command=self.on_mode_change).pack(side=tk.RIGHT)
+        ttk.Radiobutton(mode_row, text="MediaPipe Auto", variable=self.mode_var, value="dynamic", command=self.on_tracking_mode_change).pack(side=tk.LEFT)
+        ttk.Radiobutton(mode_row, text="Fixed ROI Box", variable=self.mode_var, value="fixed", command=self.on_tracking_mode_change).pack(side=tk.RIGHT)
 
         # 5. Performance Stats
-        stats_card = tk.Frame(right_col, bg="#1a202c")
-        stats_card.pack(fill=tk.X, padx=12, pady=(0, 8), side=tk.BOTTOM)
+        stats_card = tk.Frame(right_col, bg=THEME["bg_card"])
+        stats_card.pack(fill=tk.X, padx=12, pady=(0, 6), side=tk.BOTTOM)
+
         self.stats_lbl = tk.Label(
             stats_card,
             text="FPS: 0.0 | Latency: 0.0 ms",
             font=("Consolas", 9),
-            fg="#38bdf8",
-            bg="#1a202c"
+            fg=THEME["cyan"],
+            bg=THEME["bg_card"]
         )
         self.stats_lbl.pack(pady=4)
 
     def build_status_bar(self):
-        status = tk.Frame(self.root, bg="#0d1117", height=24)
+        status = tk.Frame(self.root, bg="#060910", height=26)
         status.pack(fill=tk.X, side=tk.BOTTOM)
 
         self.status_msg_lbl = tk.Label(
             status,
-            text="Ready. Click [Start Webcam] to begin ISL gesture recognition.",
+            text="Ready. Select Webcam, Photo, or Video mode to begin.",
             font=("Segoe UI", 9),
-            fg="#94a3b8",
-            bg="#0d1117"
+            fg=THEME["text_muted"],
+            bg="#060910"
         )
-        self.status_msg_lbl.pack(side=tk.LEFT, padx=12)
+        self.status_msg_lbl.pack(side=tk.LEFT, padx=14)
 
         author_lbl = tk.Label(
             status,
-            text="ISL Converter v1.0 | Offline & Standalone",
+            text="ISL Multi-Modal AI Platform • Local Offline Engine",
             font=("Segoe UI", 8),
-            fg="#64748b",
-            bg="#0d1117"
+            fg="#475569",
+            bg="#060910"
         )
-        author_lbl.pack(side=tk.RIGHT, padx=12)
+        author_lbl.pack(side=tk.RIGHT, padx=14)
 
+    # ----------------- ENGINE INITIALIZATION -----------------
     def init_engine_thread(self):
         def _load():
             try:
-                # Priority 1: Unified Combined Model (36 classes: 0-9 & A-Z, Adults & Teens)
                 combined_model = Path("artifacts/best_model_combined.keras")
                 combined_map = Path("artifacts/class_mapping_mendeley.json")
-
-                # Priority 2: Retrained Real Camera Model (26 classes: A-Z)
                 real_model = Path("artifacts/best_model_real.keras")
                 real_map = Path("artifacts/class_mapping_real.json")
 
                 if combined_model.exists() and combined_map.exists():
                     model_path = str(combined_model)
                     map_path = str(combined_map)
-                    model_desc = "36 Classes: 0–9 & A–Z (Unified Real + Mendeley Adults/Teens Model)"
+                    model_desc = "36 Classes: 0–9 & A–Z (Unified Real + Mendeley Model)"
                 elif real_model.exists() and real_map.exists():
                     model_path = str(real_model)
                     map_path = str(real_map)
@@ -423,14 +677,15 @@ class ISLDesktopApp:
         num_classes = len(self.engine.classes) if self.engine else 26
         first_cls = self.engine.classes[0] if self.engine else "A"
         last_cls = self.engine.classes[-1] if self.engine else "Z"
-        self.subtitle_lbl.configure(text=f"{num_classes} Classes ({first_cls}–{last_cls}) | MediaPipe Vision + CNN")
-        self.engine_status_lbl.configure(text=f"● {desc}", fg="#10b981")
-        self.status_msg_lbl.configure(text=f"Ready: {desc}. Click [Start Webcam] to begin.")
+        self.subtitle_lbl.configure(text=f"{num_classes} Classes ({first_cls}–{last_cls}) • Unified CNN & MediaPipe")
+        self.engine_status_lbl.configure(text=f"● {desc}", fg=THEME["emerald"])
+        self.status_msg_lbl.configure(text=f"Ready: {desc}. Select an input mode above.")
 
     def on_engine_error(self, err_msg):
-        self.engine_status_lbl.configure(text="● Model Load Error", fg="#ef4444")
-        messagebox.showerror("Model Error", f"Failed to load CNN model or MediaPipe:\n{err_msg}")
+        self.engine_status_lbl.configure(text="● Model Load Error", fg=THEME["rose"])
+        messagebox.showerror("Model Error", f"Failed to initialize CNN model:\n{err_msg}")
 
+    # ----------------- PARAMETER HANDLERS -----------------
     def on_thresh_change(self, val):
         thresh_val = float(val) / 100.0
         self.thresh_lbl.configure(text=f"Confidence Gate: {int(float(val))}%")
@@ -443,18 +698,19 @@ class ISLDesktopApp:
         if self.engine:
             self.engine.stability_duration = dur_val
 
-    def on_mode_change(self):
+    def on_tracking_mode_change(self):
         self.use_fixed_roi = (self.mode_var.get() == "fixed")
 
-    def toggle_camera(self):
-        if not self.is_running:
-            self.start_camera()
+    # ----------------- WEBCAM MODE LOGIC -----------------
+    def toggle_webcam(self):
+        if not self.is_webcam_running:
+            self.start_webcam()
         else:
-            self.stop_camera()
+            self.stop_webcam()
 
-    def start_camera(self):
+    def start_webcam(self):
         if not self.engine:
-            messagebox.showwarning("Please Wait", "Neural network is still initializing. Please wait a moment.")
+            messagebox.showwarning("Please Wait", "Deep learning engine is initializing. Please wait a moment.")
             return
 
         try:
@@ -462,64 +718,251 @@ class ISLDesktopApp:
         except ValueError:
             self.camera_idx = 0
 
-        self.status_msg_lbl.configure(text=f"Opening camera index {self.camera_idx}...")
+        self.status_msg_lbl.configure(text=f"Connecting to camera {self.camera_idx}...")
         self.cap = cv2.VideoCapture(self.camera_idx, cv2.CAP_DSHOW if os.name == "nt" else cv2.CAP_ANY)
+        if not self.cap.isOpened():
+            self.cap = cv2.VideoCapture(0)
 
         if not self.cap.isOpened():
-            self.status_msg_lbl.configure(text=f"Warning: Camera {self.camera_idx} failed. Trying Camera 1...")
-            self.cap = cv2.VideoCapture(1)
-
-        if not self.cap.isOpened():
-            messagebox.showerror("Camera Error", f"Unable to access camera index {self.camera_idx}.\nPlease check device connection and Windows camera permissions.")
-            self.status_msg_lbl.configure(text="Camera connection failed.")
+            messagebox.showerror("Camera Error", f"Unable to access camera index {self.camera_idx}.\nPlease check connection and Windows permissions.")
             return
 
-        # Request 16:9 widescreen HD (1280x720) for wider field of view and extra signing room
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
-        self.is_running = True
+        self.is_webcam_running = True
         self.btn_toggle_cam.configure(text="■ Stop Webcam", style="Danger.TButton")
-        self.status_msg_lbl.configure(text="Webcam running. Present ISL signs in view.")
+        self.status_msg_lbl.configure(text="Webcam active. Present ISL signs in view.")
 
-        # Start processing loop
-        self.update_video_loop()
+        self.update_webcam_loop()
 
-    def stop_camera(self):
-        self.is_running = False
+    def stop_webcam(self):
+        self.is_webcam_running = False
         if self.cap:
             self.cap.release()
             self.cap = None
         self.btn_toggle_cam.configure(text="▶ Start Webcam", style="Success.TButton")
         self.canvas.delete("all")
         self.pip_canvas.delete("all")
-        self.pred_badge_lbl.configure(text="Camera Stopped", fg="#94a3b8")
+        self.pred_badge_lbl.configure(text="Camera Stopped", fg=THEME["text_muted"])
         self.conf_badge_lbl.configure(text="Confidence: —")
         self.hold_var.set(0.0)
         self.hold_lbl.configure(text="Hold: 0%")
-        self.status_msg_lbl.configure(text="Webcam stopped.")
 
-    def update_video_loop(self):
-        if not self.is_running or not self.cap:
+    def update_webcam_loop(self):
+        if not self.is_webcam_running or not self.cap:
             return
 
         ret, frame = self.cap.read()
         if not ret or frame is None:
-            self.root.after(30, self.update_video_loop)
+            self.root.after(25, self.update_webcam_loop)
             return
 
-        # Flip horizontally for natural mirror feel
         frame = cv2.flip(frame, 1)
-        h, w = frame.shape[:2]
+        self.process_and_render_frame(frame, is_stream=True)
+
+        if self.is_webcam_running:
+            self.root.after(15, self.update_webcam_loop)
+
+    # ----------------- PHOTO MODE LOGIC -----------------
+    def browse_photo(self):
+        filetypes = [("Image files", "*.jpg *.jpeg *.png *.bmp *.webp"), ("All files", "*.*")]
+        path = filedialog.askopenfilename(title="Select ISL Gesture Photo", filetypes=filetypes)
+        if not path:
+            return
+
+        self.photo_path = path
+        self.photo_file_lbl.configure(text=Path(path).name)
+
+        # Windows safe load (supports non-ASCII paths)
+        try:
+            raw_bytes = np.fromfile(path, dtype=np.uint8)
+            img = cv2.imdecode(raw_bytes, cv2.IMREAD_COLOR)
+            if img is None:
+                raise ValueError("Failed to decode image data.")
+        except Exception as e:
+            messagebox.showerror("Image Load Error", f"Could not load image:\n{e}")
+            return
+
+        self.photo_original_bgr = img
+        self.status_msg_lbl.configure(text=f"Analyzing photo: {Path(path).name}...")
+
+        # Run offline prediction using static MediaPipe mode
+        if not self.engine:
+            messagebox.showwarning("Please Wait", "Engine is still initializing.")
+            return
+
+        annotated, prep_preview, result = self.engine.predict_image(img)
+
+        # Update displays
+        self.update_prediction_ui(result, prep_preview)
+        self.render_canvas(annotated)
+        if prep_preview is not None:
+            self.render_pip(prep_preview)
+        else:
+            self.pip_canvas.delete("all")
+
+        self.last_annotated = annotated
+        self.last_prep = prep_preview
+        self.last_result = result
+
+        sign = result.get("sign", "?")
+        conf = result.get("confidence", 0.0) * 100.0
+        self.status_msg_lbl.configure(text=f"Photo Analysis Complete: Identified [{sign}] ({conf:.1f}%) in {result.get('latency_ms', 0):.1f}ms")
+
+    def append_photo_sign(self):
+        """Appends the recognized photo sign to the fingerspelled text buffer."""
+        if hasattr(self, "last_result") and self.last_result:
+            sign = self.last_result.get("sign")
+            if sign and sign != "Unknown" and "failed" not in sign.lower():
+                if self.engine:
+                    self.engine.spelled_text += sign
+                self.text_entry.delete(0, tk.END)
+                self.text_entry.insert(0, self.engine.spelled_text if self.engine else sign)
+                self.status_msg_lbl.configure(text=f"Appended '{sign}' to text buffer.")
+
+    # ----------------- VIDEO MODE LOGIC -----------------
+    def browse_video(self):
+        filetypes = [("Video files", "*.mp4 *.avi *.mov *.mkv *.wmv"), ("All files", "*.*")]
+        path = filedialog.askopenfilename(title="Select ISL Video File", filetypes=filetypes)
+        if not path:
+            return
+
+        self.load_video_file(path)
+
+    def load_video_file(self, path: str):
+        if self.video_cap:
+            self.video_cap.release()
+
+        self.video_path = path
+        self.video_file_lbl.configure(text=Path(path).name)
+
+        self.video_cap = cv2.VideoCapture(path)
+        if not self.video_cap.isOpened():
+            messagebox.showerror("Video Error", f"Unable to open video file:\n{path}")
+            return
+
+        self.video_fps = self.video_cap.get(cv2.CAP_PROP_FPS) or 30.0
+        self.video_total_frames = int(self.video_cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        self.video_cur_frame = 0
+
+        self.video_slider.configure(to=max(1, self.video_total_frames - 1))
+        self.video_slider_var.set(0.0)
+
+        # Clear engine smoothing for fresh video stream
+        if self.engine:
+            self.engine.reset_smoothing()
+
+        # Read and display the first frame
+        ret, frame = self.video_cap.read()
+        if ret and frame is not None:
+            self.process_and_render_frame(frame, is_stream=False)
+            self.update_video_time_label()
+
+        self.status_msg_lbl.configure(text=f"Loaded video '{Path(path).name}' ({self.video_total_frames} frames @ {self.video_fps:.1f} FPS). Click Play.")
+
+    def toggle_video_playback(self):
+        if not self.is_video_playing:
+            self.play_video()
+        else:
+            self.pause_video()
+
+    def play_video(self):
+        if not self.video_cap:
+            messagebox.showinfo("No Video", "Please choose a video file first.")
+            return
+
+        self.is_video_playing = True
+        self.btn_vid_play.configure(text="⏸ Pause", style="Indigo.TButton")
+        self.status_msg_lbl.configure(text="Playing video and recognizing sign sequences...")
+        self.update_video_playback_loop()
+
+    def pause_video(self):
+        self.is_video_playing = False
+        self.btn_vid_play.configure(text="▶ Play", style="Success.TButton")
+        self.status_msg_lbl.configure(text="Video paused.")
+
+    def stop_video(self):
+        self.is_video_playing = False
+        self.btn_vid_play.configure(text="▶ Play", style="Success.TButton")
+        if self.video_cap:
+            self.video_cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+            self.video_cur_frame = 0
+            self.video_slider_var.set(0.0)
+            ret, frame = self.video_cap.read()
+            if ret and frame is not None:
+                self.process_and_render_frame(frame, is_stream=False)
+                self.update_video_time_label()
+        if self.engine:
+            self.engine.reset_smoothing()
+        self.status_msg_lbl.configure(text="Video stopped and reset to start.")
+
+    def rewind_video(self):
+        if not self.video_cap:
+            return
+        new_frame = max(0, self.video_cur_frame - int(self.video_fps * 5))
+        self.video_cap.set(cv2.CAP_PROP_POS_FRAMES, new_frame)
+        self.video_cur_frame = new_frame
+        self.video_slider_var.set(new_frame)
+        ret, frame = self.video_cap.read()
+        if ret and frame is not None:
+            self.process_and_render_frame(frame, is_stream=False)
+            self.update_video_time_label()
+
+    def on_video_seek(self, val):
+        if not self.video_cap or self.video_scrubbing:
+            return
+        target_frame = int(float(val))
+        self.video_cap.set(cv2.CAP_PROP_POS_FRAMES, target_frame)
+        self.video_cur_frame = target_frame
+        ret, frame = self.video_cap.read()
+        if ret and frame is not None:
+            self.process_and_render_frame(frame, is_stream=False)
+            self.update_video_time_label()
+
+    def update_video_time_label(self):
+        cur_sec = int(self.video_cur_frame / max(1.0, self.video_fps))
+        tot_sec = int(self.video_total_frames / max(1.0, self.video_fps))
+        cur_str = f"{cur_sec // 60:02d}:{cur_sec % 60:02d}"
+        tot_str = f"{tot_sec // 60:02d}:{tot_sec % 60:02d}"
+        self.vid_time_lbl.configure(text=f"{cur_str} / {tot_str}  (Frame {self.video_cur_frame}/{self.video_total_frames})")
+
+    def update_video_playback_loop(self):
+        if not self.is_video_playing or not self.video_cap:
+            return
+
+        ret, frame = self.video_cap.read()
+        if not ret or frame is None:
+            # End of video reached
+            self.is_video_playing = False
+            self.btn_vid_play.configure(text="▶ Replay", style="Success.TButton")
+            self.status_msg_lbl.configure(text="End of video reached. Fully processed.")
+            return
+
+        self.video_cur_frame += 1
+        self.video_slider_var.set(self.video_cur_frame)
+        self.update_video_time_label()
+
+        self.process_and_render_frame(frame, is_stream=True)
+
+        # Dynamic sleep timing to honor video source FPS
+        delay_ms = max(10, int(1000.0 / max(10.0, self.video_fps)))
+        if self.is_video_playing:
+            self.root.after(delay_ms, self.update_video_playback_loop)
+
+    # ----------------- CORE PIPELINE DISPATCHER -----------------
+    def process_and_render_frame(self, frame_bgr, is_stream=True):
+        """Processes frame through CNN & MediaPipe, updates badges, PiP, and text buffer."""
+        if not self.engine:
+            return
+
+        h, w = frame_bgr.shape[:2]
 
         if self.use_fixed_roi:
-            # Fixed central crop mode
-            box_side = 240
+            box_side = min(h, w, 240)
             x1 = (w - box_side) // 2
             y1 = (h - box_side) // 2
-            x2 = x1 + box_side
-            y2 = y1 + box_side
-            roi_bgr = frame[y1:y2, x1:x2]
+            roi_bgr = frame_bgr[y1:y1 + box_side, x1:x1 + box_side]
 
             preprocessed = preprocess_image(
                 roi_bgr,
@@ -534,100 +977,47 @@ class ISLDesktopApp:
             tensor_input = np.expand_dims(preprocessed, axis=0)
             preds = self.engine.model(tensor_input, training=False).numpy()[0]
             best_idx = int(np.argmax(preds))
-            raw_conf = float(preds[best_idx])
-            raw_cls = self.engine.idx_to_class.get(best_idx, "Unknown")
+            conf = float(preds[best_idx])
+            pred_cls = self.engine.idx_to_class.get(best_idx, "Unknown")
+            is_reliable = (conf >= self.engine.confidence_threshold)
 
-            if raw_cls and raw_conf >= self.engine.confidence_threshold:
-                self.engine.prediction_buffer.append(raw_cls)
-                self.engine.confidence_buffer.append(raw_conf)
-            else:
-                self.engine.prediction_buffer.append(None)
-                self.engine.confidence_buffer.append(0.0)
+            annotated = frame_bgr.copy()
+            box_color = (0, 255, 100) if is_reliable else (50, 150, 255)
+            cv2.rectangle(annotated, (x1, y1), (x1 + box_side, y1 + box_side), box_color, 2)
 
-            valid_preds = [p for p in self.engine.prediction_buffer if p is not None]
-            if valid_preds and len(valid_preds) >= (self.engine.smoothing_window // 2 + 1):
-                from collections import Counter
-                maj_cls, _ = Counter(valid_preds).most_common(1)[0]
-                avg_conf = float(np.mean([c for p, c in zip(self.engine.prediction_buffer, self.engine.confidence_buffer) if p == maj_cls]))
-                is_reliable = True
-                smooth_cls = maj_cls
-            else:
-                smooth_cls = "No reliable sign detected"
-                avg_conf = 0.0
-                is_reliable = False
-
-            annotated = frame.copy()
-            cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 255, 100) if is_reliable else (50, 150, 255), 2)
             result = {
-                "predicted_class": smooth_cls,
-                "confidence": avg_conf,
-                "raw_class": raw_cls,
-                "raw_confidence": raw_conf,
+                "predicted_class": pred_cls if is_reliable else "No reliable sign detected",
+                "sign": pred_cls,
+                "confidence": conf,
+                "raw_class": pred_cls,
+                "raw_confidence": conf,
                 "is_reliable": is_reliable,
-                "latency_ms": 22.0,
+                "latency_ms": 20.0,
                 "fps": 30.0,
                 "spelled_text": self.engine.spelled_text,
-                "hold_progress": 0.0
+                "hold_progress": 0.0,
+                "top3": [{"class": pred_cls, "prob": conf}],
+                "num_hands": 1,
+                "hand_mode": "Fixed Central ROI Mode"
             }
         else:
-            annotated, prep_preview, result = self.engine.process_frame(frame)
+            annotated, prep_preview, result = self.engine.process_frame(frame_bgr)
 
-        # Update Live Prediction Cards
-        if result["is_reliable"]:
-            self.pred_badge_lbl.configure(text=f"Sign: {result['predicted_class']}", fg="#10b981")
-            self.conf_badge_lbl.configure(
-                text=f"Confidence: {result['confidence'] * 100:.1f}% (Gate: {int(self.engine.confidence_threshold * 100)}%)",
-                fg="#34d399"
-            )
-        else:
-            self.pred_badge_lbl.configure(text="No Reliable Sign", fg="#fbbf24")
-            self.conf_badge_lbl.configure(
-                text=f"Raw: {result['raw_class']} ({result['raw_confidence'] * 100:.1f}%)",
-                fg="#94a3b8"
-            )
-
-        # Update Hand Mode Label
-        if "hand_mode" in result:
-            self.hand_mode_lbl.configure(text=f"✋ {result['hand_mode']}")
-
-        # Update Top-3 Breakdown Label
-        if result.get("top3"):
-            t_str = " | ".join([f"{item['class']}:{item['prob']*100:.0f}%" for item in result["top3"]])
-            self.top3_lbl.configure(text=f"Top 3: {t_str}")
-        else:
-            self.top3_lbl.configure(text="Top 3: —")
-
-        # Update Fingerspelling Entry
-        current_text = self.text_entry.get()
-        if current_text != self.engine.spelled_text:
-            self.text_entry.delete(0, tk.END)
-            self.text_entry.insert(0, self.engine.spelled_text)
-            self.text_entry.xview_moveto(1.0)
-
-        # Update Hold Progress Bar
-        hold_pct = result.get("hold_progress", 0.0) * 100.0
-        self.hold_var.set(hold_pct)
-        self.hold_lbl.configure(text=f"Hold: {int(hold_pct)}%")
-
-        # Update Performance Label
-        self.stats_lbl.configure(text=f"FPS: {result['fps']:.1f} | Latency: {result['latency_ms']:.1f} ms")
-
-        # Render Main Video Canvas
+        # Update UI Controls
+        self.update_prediction_ui(result, prep_preview)
         self.render_canvas(annotated)
 
-        # Render PiP Inset
         if prep_preview is not None:
             self.render_pip(prep_preview)
         else:
             self.pip_canvas.delete("all")
 
-        # Save last frames for snapshot
         self.last_annotated = annotated
         self.last_prep = prep_preview
         self.last_result = result
 
-        # Auto-Capture Full Screen on Confirmed Result
-        if result.get("new_char_confirmed") and self.auto_capture_var.get() and self.engine:
+        # Auto-Capture Full Screen on Confirmed Result (Webcam Mode only)
+        if self.current_mode == "webcam" and result.get("new_char_confirmed") and self.auto_capture_var.get() and self.engine:
             app_win_img = None
             try:
                 pil_win = self.capture_full_window()
@@ -646,13 +1036,56 @@ class ISLDesktopApp:
                 app_window_img=app_win_img
             )
             self.status_msg_lbl.configure(
-                text=f"📸 Auto-Captured Full Screen [{result['confirmed_char']}] ({snap_res['confidence']}%) -> {snap_res['filename']}",
-                fg="#38bdf8"
+                text=f"📸 Auto-Captured [{result['confirmed_char']}] ({snap_res['confidence']}%) -> {snap_res['filename']}",
+                fg=THEME["cyan"]
             )
 
-        # Schedule next frame (~30ms = ~33 FPS)
-        if self.is_running:
-            self.root.after(15, self.update_video_loop)
+    def update_prediction_ui(self, result: dict, prep_preview):
+        # 1. Prediction Badge
+        is_reliable = result.get("is_reliable", False)
+        pred_cls = result.get("predicted_class", "No Sign Detected")
+        conf = result.get("confidence", 0.0)
+
+        if is_reliable and pred_cls != "No reliable sign detected":
+            self.pred_badge_lbl.configure(text=f"Sign: {pred_cls}", fg=THEME["emerald"])
+            self.conf_badge_lbl.configure(
+                text=f"Confidence: {conf * 100:.1f}% (Gate: {int(self.engine.confidence_threshold * 100)}%)",
+                fg=THEME["emerald"]
+            )
+        else:
+            raw_c = result.get("raw_class", "—")
+            raw_p = result.get("raw_confidence", 0.0) * 100.0
+            self.pred_badge_lbl.configure(text=pred_cls if "Low Conf" in pred_cls else "No Reliable Sign", fg=THEME["amber"])
+            self.conf_badge_lbl.configure(text=f"Raw: {raw_c} ({raw_p:.1f}%)" if raw_c != "—" else "Confidence: —", fg=THEME["text_muted"])
+
+        # 2. Hand Mode
+        if "hand_mode" in result:
+            self.hand_mode_lbl.configure(text=f"✋ {result['hand_mode']}")
+
+        # 3. Top 3
+        if result.get("top3"):
+            t_str = " | ".join([f"{item['class']}:{item['prob']*100:.0f}%" for item in result["top3"]])
+            self.top3_lbl.configure(text=f"Top 3: {t_str}")
+        else:
+            self.top3_lbl.configure(text="Top 3: —")
+
+        # 4. Spelled Text Buffer
+        spelled = self.engine.spelled_text if self.engine else ""
+        current_text = self.text_entry.get()
+        if current_text != spelled:
+            self.text_entry.delete(0, tk.END)
+            self.text_entry.insert(0, spelled)
+            self.text_entry.xview_moveto(1.0)
+
+        # 5. Hold Progress
+        hold_pct = result.get("hold_progress", 0.0) * 100.0
+        self.hold_var.set(hold_pct)
+        self.hold_lbl.configure(text=f"Hold: {int(hold_pct)}%")
+
+        # 6. Performance
+        fps = result.get("fps", 0.0)
+        lat = result.get("latency_ms", 0.0)
+        self.stats_lbl.configure(text=f"FPS: {fps:.1f} | Latency: {lat:.1f} ms")
 
     def render_canvas(self, bgr_img):
         cw = self.canvas.winfo_width()
@@ -661,30 +1094,27 @@ class ISLDesktopApp:
             return
 
         ih, iw = bgr_img.shape[:2]
-        # Maintain aspect ratio
         scale = min(cw / iw, ch / ih)
-        nw, nh = int(iw * scale), int(ih * scale)
+        nw, nh = max(1, int(iw * scale)), max(1, int(ih * scale))
 
         resized = cv2.resize(bgr_img, (nw, nh), interpolation=cv2.INTER_LINEAR)
         rgb_img = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
         self.tk_main_img = ImageTk.PhotoImage(Image.fromarray(rgb_img))
 
         self.canvas.delete("all")
-        # Center image in canvas
         self.canvas.create_image(cw // 2, ch // 2, image=self.tk_main_img, anchor=tk.CENTER)
 
     def render_pip(self, gray_64x64):
-        # Resize 64x64 to 128x128 for clear inset display
         scaled = cv2.resize(gray_64x64, (128, 128), interpolation=cv2.INTER_NEAREST)
         self.tk_pip_img = ImageTk.PhotoImage(Image.fromarray(scaled))
         self.pip_canvas.delete("all")
         self.pip_canvas.create_image(64, 64, image=self.tk_pip_img, anchor=tk.CENTER)
 
     def on_canvas_resize(self, event):
-        # Redraw last frame on window resize
         if hasattr(self, "last_annotated") and self.last_annotated is not None:
             self.render_canvas(self.last_annotated)
 
+    # ----------------- TEXT ACTIONS -----------------
     def action_space(self):
         if self.engine:
             self.engine.add_space()
@@ -709,14 +1139,9 @@ class ISLDesktopApp:
             self.root.clipboard_append(text)
             self.status_msg_lbl.configure(text=f"Copied '{text}' to clipboard!")
 
+    # ----------------- SNAPSHOT & EXPORT -----------------
     def capture_full_window(self):
-        """
-        Captures a high-resolution screenshot of the entire application window,
-        including webcam canvas, fingerspelled text, CNN PiP preview, prediction badges,
-        and stream controls.
-        """
         self.root.update_idletasks()
-
         if os.name == "nt":
             try:
                 import ctypes
@@ -738,7 +1163,6 @@ class ISLDesktopApp:
                 hbm = gdi32.CreateCompatibleBitmap(hdc_win, w, h)
                 gdi32.SelectObject(hdc_mem, hbm)
 
-                # PW_RENDERFULLCONTENT = 2, fallback to 0
                 res = user32.PrintWindow(target_hwnd, hdc_mem, 2)
                 if not res:
                     res = user32.PrintWindow(target_hwnd, hdc_mem, 0)
@@ -761,7 +1185,7 @@ class ISLDesktopApp:
                 bmi = BITMAPINFOHEADER()
                 bmi.biSize = ctypes.sizeof(BITMAPINFOHEADER)
                 bmi.biWidth = w
-                bmi.biHeight = -h  # top-down DIB
+                bmi.biHeight = -h
                 bmi.biPlanes = 1
                 bmi.biBitCount = 32
                 bmi.biCompression = 0
@@ -770,15 +1194,13 @@ class ISLDesktopApp:
                 gdi32.GetDIBits(hdc_mem, hbm, 0, h, buffer, ctypes.byref(bmi), 0)
 
                 img = Image.frombuffer('RGBA', (w, h), buffer, 'raw', 'BGRA', 0, 1).convert('RGB')
-
                 gdi32.DeleteObject(hbm)
                 gdi32.DeleteDC(hdc_mem)
                 user32.ReleaseDC(target_hwnd, hdc_win)
                 return img
-            except Exception as e:
-                print(f"[UI] PrintWindow capture failed: {e}")
+            except Exception:
+                pass
 
-        # Fallback to PIL ImageGrab if available
         try:
             from PIL import ImageGrab
             x = self.root.winfo_rootx()
@@ -790,9 +1212,8 @@ class ISLDesktopApp:
             return None
 
     def take_snapshot(self):
-        """Saves a pixel-accurate, high-resolution full-screen snapshot of the entire desktop and app."""
         if not hasattr(self, "last_annotated") or self.last_annotated is None:
-            self.status_msg_lbl.configure(text="No active frame to capture.", fg="#fbbf24")
+            self.status_msg_lbl.configure(text="No active frame to capture.", fg=THEME["amber"])
             return
 
         res = getattr(self, "last_result", None) or {"predicted_class": "MANUAL", "confidence": 1.0}
@@ -815,27 +1236,17 @@ class ISLDesktopApp:
                 app_window_img=app_win_img
             )
             self.status_msg_lbl.configure(
-                text=f"📸 Full Screen Saved: {snap_res['filename']}",
-                fg="#10b981"
+                text=f"📸 Snapshot Saved: {snap_res['filename']}",
+                fg=THEME["emerald"]
             )
-        else:
-            snap_id = int(time.time())
-            snap_path = self.snapshots_dir / f"fullscreen_snapshot_{snap_id}.png"
-            if app_win_img is not None:
-                cv2.imwrite(str(snap_path), app_win_img)
-            else:
-                cv2.imwrite(str(snap_path), self.last_annotated)
-            self.status_msg_lbl.configure(text=f"Full Screen Saved: {snap_path.name}", fg="#10b981")
-
-        self.root.after(3500, lambda: self.status_msg_lbl.configure(
-            text="Webcam running. Present ISL signs in view." if self.is_running else "Ready.",
-            fg="#94a3b8"
-        ))
 
     def on_close(self):
-        self.is_running = False
+        self.is_webcam_running = False
+        self.is_video_playing = False
         if self.cap:
             self.cap.release()
+        if self.video_cap:
+            self.video_cap.release()
         if self.engine:
             self.engine.release()
         self.root.destroy()
@@ -843,7 +1254,7 @@ class ISLDesktopApp:
 
 def main():
     root = tk.Tk()
-    app = ISLDesktopApp(root)
+    app = ISLMultiModalApp(root)
     root.mainloop()
 
 
