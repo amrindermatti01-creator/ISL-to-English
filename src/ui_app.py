@@ -32,6 +32,7 @@ from PIL import Image, ImageTk
 
 from src.inference import ISLInferenceEngine
 from src.preprocessing import preprocess_image
+from src.reverse_translator import ReverseISLTranslator
 
 
 # Visual Design System Theme Tokens
@@ -60,10 +61,19 @@ class ISLMultiModalApp:
 
         # Core State
         self.engine = None
-        self.current_mode = "webcam"  # 'webcam' | 'photo' | 'video'
+        self.current_mode = "webcam"  # 'webcam' | 'photo' | 'video' | 'reverse'
         self.use_fixed_roi = False
         self.snapshots_dir = Path("reports/snapshots")
         self.snapshots_dir.mkdir(parents=True, exist_ok=True)
+
+        # Reverse Translation State (Speech & Text to Sign)
+        self.reverse_translator = ReverseISLTranslator()
+        self.reverse_sequence = []
+        self.reverse_idx = 0
+        self.reverse_is_playing = False
+        self.reverse_anim_job = None
+        self.reverse_speed_ms = 1200
+        self.reverse_auto_speech = tk.BooleanVar(value=True)
 
         # Webcam State
         self.cap = None
@@ -206,7 +216,7 @@ class ISLMultiModalApp:
         self.engine_status_lbl.pack(side=tk.RIGHT, padx=20)
 
     def build_mode_selector(self):
-        """Builds the top segmented switcher for Webcam, Photo, and Video modes."""
+        """Builds the top segmented switcher for Webcam, Photo, Video, and Reverse modes."""
         selector_bar = tk.Frame(self.root, bg=THEME["bg_dark"], height=48)
         selector_bar.pack(fill=tk.X, padx=16, pady=(8, 4))
 
@@ -241,7 +251,7 @@ class ISLMultiModalApp:
 
         self.btn_mode_photo = tk.Button(
             pill_frame,
-            text="📸  Photo Mode (Letter/Sign)",
+            text="📸  Photo Mode",
             font=("Segoe UI", 10),
             bg=THEME["bg_card"],
             fg=THEME["text_muted"],
@@ -249,7 +259,7 @@ class ISLMultiModalApp:
             activeforeground=THEME["text_white"],
             relief="flat",
             bd=0,
-            padx=16,
+            padx=14,
             pady=6,
             cursor="hand2",
             command=lambda: self.switch_mode("photo")
@@ -258,7 +268,24 @@ class ISLMultiModalApp:
 
         self.btn_mode_video = tk.Button(
             pill_frame,
-            text="🎥  Video Mode (Word/Sentence)",
+            text="🎥  Video Mode",
+            font=("Segoe UI", 10),
+            bg=THEME["bg_card"],
+            fg=THEME["text_muted"],
+            activebackground=THEME["bg_inner"],
+            activeforeground=THEME["text_white"],
+            relief="flat",
+            bd=0,
+            padx=14,
+            pady=6,
+            cursor="hand2",
+            command=lambda: self.switch_mode("video")
+        )
+        self.btn_mode_video.pack(side=tk.LEFT)
+
+        self.btn_mode_reverse = tk.Button(
+            pill_frame,
+            text="🗣️  Speech & Text → Sign",
             font=("Segoe UI", 10),
             bg=THEME["bg_card"],
             fg=THEME["text_muted"],
@@ -269,9 +296,9 @@ class ISLMultiModalApp:
             padx=16,
             pady=6,
             cursor="hand2",
-            command=lambda: self.switch_mode("video")
+            command=lambda: self.switch_mode("reverse")
         )
-        self.btn_mode_video.pack(side=tk.LEFT)
+        self.btn_mode_reverse.pack(side=tk.LEFT)
 
         # Mode explanation tip
         self.mode_tip_lbl = tk.Label(
@@ -284,7 +311,7 @@ class ISLMultiModalApp:
         self.mode_tip_lbl.pack(side=tk.LEFT, padx=16)
 
     def switch_mode(self, new_mode: str):
-        """Switches UI view between Webcam, Photo, and Video modes."""
+        """Switches UI view between Webcam, Photo, Video, and Reverse modes."""
         if self.current_mode == new_mode:
             return
 
@@ -293,6 +320,8 @@ class ISLMultiModalApp:
             self.stop_webcam()
         if self.is_video_playing:
             self.pause_video()
+        if hasattr(self, "reverse_is_playing") and self.reverse_is_playing:
+            self.stop_reverse_animation()
 
         self.current_mode = new_mode
 
@@ -300,39 +329,119 @@ class ISLMultiModalApp:
         for mode, btn in [
             ("webcam", self.btn_mode_webcam),
             ("photo", self.btn_mode_photo),
-            ("video", self.btn_mode_video)
+            ("video", self.btn_mode_video),
+            ("reverse", self.btn_mode_reverse)
         ]:
             if mode == new_mode:
                 btn.configure(bg=THEME["cyan"], fg="#000000", font=("Segoe UI", 10, "bold"))
             else:
                 btn.configure(bg=THEME["bg_card"], fg=THEME["text_muted"], font=("Segoe UI", 10))
 
-        # Update Mode Tip
+        # Update Mode Tip & Control Layout
         if new_mode == "webcam":
             self.mode_tip_lbl.configure(text="Live camera feed: Hold sign ~1.0s to accumulate fingerspelled letters.")
             self.webcam_ctrl_frame.pack(fill=tk.X, pady=(0, 10))
             self.photo_ctrl_frame.pack_forget()
             self.video_ctrl_frame.pack_forget()
+            if hasattr(self, "reverse_ctrl_frame"):
+                self.reverse_ctrl_frame.pack_forget()
             self.video_playback_bar.pack_forget()
+            if hasattr(self, "reverse_playback_bar"):
+                self.reverse_playback_bar.pack_forget()
+            if hasattr(self, "pip_card"):
+                self.pip_card.pack(fill=tk.X, padx=12, pady=(0, 10))
+            if hasattr(self, "param_card"):
+                self.param_card.pack(fill=tk.X, padx=12, pady=(0, 8))
+            if hasattr(self, "btn_convert_text"):
+                self.btn_convert_text.pack_forget()
+            if hasattr(self, "hold_progress"):
+                self.hold_progress.pack(side=tk.RIGHT)
+            if hasattr(self, "hold_lbl"):
+                self.hold_lbl.pack(side=tk.RIGHT, padx=(0, 8))
+            if hasattr(self, "text_title_lbl"):
+                self.text_title_lbl.configure(text="ASSEMBLED WORD / FINGERSPELLED TEXT BUFFER", fg=THEME["text_muted"])
         elif new_mode == "photo":
             self.mode_tip_lbl.configure(text="Upload static image (.jpg, .png): Instant offline classification.")
             self.webcam_ctrl_frame.pack_forget()
             self.photo_ctrl_frame.pack(fill=tk.X, pady=(0, 10))
             self.video_ctrl_frame.pack_forget()
+            if hasattr(self, "reverse_ctrl_frame"):
+                self.reverse_ctrl_frame.pack_forget()
             self.video_playback_bar.pack_forget()
+            if hasattr(self, "reverse_playback_bar"):
+                self.reverse_playback_bar.pack_forget()
+            if hasattr(self, "pip_card"):
+                self.pip_card.pack(fill=tk.X, padx=12, pady=(0, 10))
+            if hasattr(self, "param_card"):
+                self.param_card.pack(fill=tk.X, padx=12, pady=(0, 8))
+            if hasattr(self, "btn_convert_text"):
+                self.btn_convert_text.pack_forget()
+            if hasattr(self, "hold_progress"):
+                self.hold_progress.pack(side=tk.RIGHT)
+            if hasattr(self, "hold_lbl"):
+                self.hold_lbl.pack(side=tk.RIGHT, padx=(0, 8))
+            if hasattr(self, "text_title_lbl"):
+                self.text_title_lbl.configure(text="ASSEMBLED WORD / FINGERSPELLED TEXT BUFFER", fg=THEME["text_muted"])
         elif new_mode == "video":
             self.mode_tip_lbl.configure(text="Upload video recording (.mp4, .avi): Track sign sequence and construct full words.")
             self.webcam_ctrl_frame.pack_forget()
             self.photo_ctrl_frame.pack_forget()
             self.video_ctrl_frame.pack(fill=tk.X, pady=(0, 10))
+            if hasattr(self, "reverse_ctrl_frame"):
+                self.reverse_ctrl_frame.pack_forget()
             self.video_playback_bar.pack(fill=tk.X, pady=(6, 0))
+            if hasattr(self, "reverse_playback_bar"):
+                self.reverse_playback_bar.pack_forget()
+            if hasattr(self, "pip_card"):
+                self.pip_card.pack(fill=tk.X, padx=12, pady=(0, 10))
+            if hasattr(self, "param_card"):
+                self.param_card.pack(fill=tk.X, padx=12, pady=(0, 8))
+            if hasattr(self, "btn_convert_text"):
+                self.btn_convert_text.pack_forget()
+            if hasattr(self, "hold_progress"):
+                self.hold_progress.pack(side=tk.RIGHT)
+            if hasattr(self, "hold_lbl"):
+                self.hold_lbl.pack(side=tk.RIGHT, padx=(0, 8))
+            if hasattr(self, "text_title_lbl"):
+                self.text_title_lbl.configure(text="ASSEMBLED WORD / FINGERSPELLED TEXT BUFFER", fg=THEME["text_muted"])
+        elif new_mode == "reverse":
+            self.mode_tip_lbl.configure(text="Speak into mic or type English letters/words in the box below to render ISL signs.")
+            self.webcam_ctrl_frame.pack_forget()
+            self.photo_ctrl_frame.pack_forget()
+            self.video_ctrl_frame.pack_forget()
+            self.video_playback_bar.pack_forget()
+            if hasattr(self, "pip_card"):
+                self.pip_card.pack_forget()
+            if hasattr(self, "param_card"):
+                self.param_card.pack_forget()
+            if hasattr(self, "reverse_ctrl_frame"):
+                self.reverse_ctrl_frame.pack(fill=tk.X, pady=(0, 10))
+            if hasattr(self, "reverse_playback_bar"):
+                self.reverse_playback_bar.pack(fill=tk.X, pady=(6, 0))
+            if hasattr(self, "hold_progress"):
+                self.hold_progress.pack_forget()
+            if hasattr(self, "hold_lbl"):
+                self.hold_lbl.pack_forget()
+            if hasattr(self, "btn_convert_text"):
+                self.btn_convert_text.pack(side=tk.RIGHT, padx=6)
+            if hasattr(self, "text_title_lbl"):
+                self.text_title_lbl.configure(
+                    text="✍️ TYPE ENGLISH LETTER OR WORD HERE (A-Z, 1-9) & PRESS ENTER (OR CLICK [SHOW ISL SIGN]):",
+                    fg=THEME["cyan"]
+                )
+            if hasattr(self, "text_entry"):
+                self.text_entry.focus_set()
+                self.text_entry.select_range(0, tk.END)
+            # Display default sign A on entry
+            self.translate_text_to_signs("A")
 
-        # Clear canvas
-        self.canvas.delete("all")
-        self.pip_canvas.delete("all")
-        self.pred_badge_lbl.configure(text="Ready in " + new_mode.capitalize() + " Mode", fg=THEME["text_muted"])
-        self.conf_badge_lbl.configure(text="Confidence: —")
-        self.status_msg_lbl.configure(text=f"Switched to {new_mode.upper()} mode. Select input or start feed.")
+        # Clear canvas if not reverse mode
+        if new_mode != "reverse":
+            self.canvas.delete("all")
+            self.pip_canvas.delete("all")
+            self.pred_badge_lbl.configure(text="Ready in " + new_mode.capitalize() + " Mode", fg=THEME["text_muted"])
+            self.conf_badge_lbl.configure(text="Confidence: —")
+            self.status_msg_lbl.configure(text=f"Switched to {new_mode.upper()} mode. Select input or start feed.")
 
     def build_main_content(self):
         container = tk.Frame(self.root, bg=THEME["bg_dark"])
@@ -387,6 +496,32 @@ class ISLMultiModalApp:
         )
         self.vid_time_lbl.pack(side=tk.RIGHT, padx=6)
 
+        # Reverse Playback Bar (Hidden unless in Reverse mode)
+        self.reverse_playback_bar = tk.Frame(viewport_card, bg=THEME["bg_card"])
+        rev_btn_row = tk.Frame(self.reverse_playback_bar, bg=THEME["bg_card"])
+        rev_btn_row.pack(fill=tk.X, padx=12, pady=(4, 6))
+
+        self.btn_rev_prev = ttk.Button(rev_btn_row, text="⏮ Prev Sign", style="Action.TButton", command=self.prev_reverse_sign)
+        self.btn_rev_prev.pack(side=tk.LEFT, padx=(0, 4))
+
+        self.btn_rev_play = ttk.Button(rev_btn_row, text="▶ Play Fingerspelling", style="Success.TButton", command=self.toggle_reverse_animation)
+        self.btn_rev_play.pack(side=tk.LEFT, padx=4)
+
+        self.btn_rev_next = ttk.Button(rev_btn_row, text="Next Sign ⏭", style="Action.TButton", command=self.next_reverse_sign)
+        self.btn_rev_next.pack(side=tk.LEFT, padx=4)
+
+        self.btn_rev_speak = ttk.Button(rev_btn_row, text="🔊 Speak Aloud", style="Indigo.TButton", command=self.pronounce_current_sign)
+        self.btn_rev_speak.pack(side=tk.LEFT, padx=8)
+
+        self.reverse_step_lbl = tk.Label(
+            rev_btn_row,
+            text="Sign: 1 / 1  ('A')",
+            font=("Consolas", 10, "bold"),
+            fg=THEME["cyan"],
+            bg=THEME["bg_card"]
+        )
+        self.reverse_step_lbl.pack(side=tk.RIGHT, padx=6)
+
         # Fingerspelling Output Card (Below Canvas)
         text_card = tk.Frame(left_col, bg=THEME["bg_card"], height=125, bd=1, relief="solid")
         text_card.pack(fill=tk.X, pady=(10, 0))
@@ -394,13 +529,14 @@ class ISLMultiModalApp:
         text_title_row = tk.Frame(text_card, bg=THEME["bg_card"])
         text_title_row.pack(fill=tk.X, padx=14, pady=(8, 2))
 
-        tk.Label(
+        self.text_title_lbl = tk.Label(
             text_title_row,
             text="ASSEMBLED WORD / FINGERSPELLED TEXT BUFFER",
             font=("Segoe UI", 9, "bold"),
             fg=THEME["text_muted"],
             bg=THEME["bg_card"]
-        ).pack(side=tk.LEFT)
+        )
+        self.text_title_lbl.pack(side=tk.LEFT)
 
         # Stability hold progress bar
         self.hold_var = tk.DoubleVar(value=0.0)
@@ -422,7 +558,7 @@ class ISLMultiModalApp:
         )
         self.hold_lbl.pack(side=tk.RIGHT, padx=(0, 8))
 
-        # Text display entry
+        # Text display entry (Used for both Webcam assembly and direct typing in Reverse mode)
         self.text_entry = tk.Entry(
             text_card,
             font=("Consolas", 16, "bold"),
@@ -433,6 +569,7 @@ class ISLMultiModalApp:
             bd=6
         )
         self.text_entry.pack(fill=tk.X, padx=14, pady=4)
+        self.text_entry.bind("<Return>", lambda e: self.on_main_text_submit())
 
         # Text action buttons
         btn_row = tk.Frame(text_card, bg=THEME["bg_card"])
@@ -442,6 +579,14 @@ class ISLMultiModalApp:
         ttk.Button(btn_row, text="[ ⌫ Backspace ]", style="Action.TButton", command=self.action_backspace).pack(side=tk.LEFT, padx=6)
         ttk.Button(btn_row, text="[ 🗑 Clear Buffer ]", style="Action.TButton", command=self.action_clear).pack(side=tk.LEFT, padx=6)
         ttk.Button(btn_row, text="[ 📋 Copy Text ]", style="Action.TButton", command=self.action_copy).pack(side=tk.LEFT, padx=6)
+
+        # Dedicated Convert Button for Reverse Mode
+        self.btn_convert_text = ttk.Button(
+            btn_row,
+            text="[ 🔍 Show ISL Sign ]",
+            style="Success.TButton",
+            command=self.on_main_text_submit
+        )
 
         # ----------------- RIGHT COLUMN: Cards & Controls -----------------
         right_col = tk.Frame(container, bg=THEME["bg_card"], width=350, bd=1, relief="solid")
@@ -491,12 +636,12 @@ class ISLMultiModalApp:
         self.top3_lbl.pack(pady=(0, 8))
 
         # 2. PiP Preview of Canny Preprocessed 64x64 input
-        pip_card = tk.Frame(right_col, bg=THEME["bg_inner"], bd=1, relief="solid")
-        pip_card.pack(fill=tk.X, padx=12, pady=(0, 10))
+        self.pip_card = tk.Frame(right_col, bg=THEME["bg_inner"], bd=1, relief="solid")
+        self.pip_card.pack(fill=tk.X, padx=12, pady=(0, 10))
 
-        tk.Label(pip_card, text="CNN INPUT RADAR (64x64 Canny Edge)", font=("Segoe UI", 9, "bold"), fg=THEME["text_muted"], bg=THEME["bg_inner"]).pack(pady=(8, 4))
+        tk.Label(self.pip_card, text="CNN INPUT RADAR (64x64 Canny Edge)", font=("Segoe UI", 9, "bold"), fg=THEME["text_muted"], bg=THEME["bg_inner"]).pack(pady=(8, 4))
 
-        self.pip_canvas = tk.Canvas(pip_card, width=128, height=128, bg="#080C14", highlightthickness=1, highlightbackground=THEME["border"])
+        self.pip_canvas = tk.Canvas(self.pip_card, width=128, height=128, bg="#080C14", highlightthickness=1, highlightbackground=THEME["border"])
         self.pip_canvas.pack(pady=(0, 8))
 
         # 3. Dynamic Mode Controls Container
@@ -571,30 +716,164 @@ class ISLMultiModalApp:
 
         ttk.Button(self.video_ctrl_frame, text="📂 Choose Video File...", style="Indigo.TButton", command=self.browse_video).pack(fill=tk.X, padx=12, pady=(2, 6))
 
+        # -- D. REVERSE CONTROLS FRAME (Speech & Text to ISL) --
+        self.reverse_ctrl_frame = tk.Frame(self.controls_container, bg=THEME["bg_inner"], bd=1, relief="solid")
+
+        tk.Label(self.reverse_ctrl_frame, text="ENGLISH → ISL CONVERTER", font=("Segoe UI", 9, "bold"), fg=THEME["cyan"], bg=THEME["bg_inner"]).pack(pady=(6, 3))
+
+        # 1. Voice Speech Input
+        voice_box = tk.Frame(self.reverse_ctrl_frame, bg=THEME["bg_card"], bd=1, relief="solid")
+        voice_box.pack(fill=tk.X, padx=8, pady=(2, 4))
+
+        tk.Label(voice_box, text="🎙️ VOICE INPUT (SPEAK ENGLISH)", font=("Segoe UI", 8, "bold"), fg=THEME["cyan"], bg=THEME["bg_card"]).pack(anchor=tk.W, padx=6, pady=(3, 1))
+
+        self.btn_voice_input = tk.Button(
+            voice_box,
+            text="🎙️  Speak Letter / Word",
+            font=("Segoe UI", 9, "bold"),
+            bg=THEME["cyan"],
+            fg="#000000",
+            activebackground="#70efff",
+            relief="flat",
+            bd=0,
+            pady=4,
+            cursor="hand2",
+            command=self.start_voice_recognition
+        )
+        self.btn_voice_input.pack(fill=tk.X, padx=6, pady=3)
+
+        self.voice_status_lbl = tk.Label(
+            voice_box,
+            text="Mic ready. Click and speak clearly.",
+            font=("Segoe UI", 8, "italic"),
+            fg=THEME["text_muted"],
+            bg=THEME["bg_card"],
+            wraplength=300
+        )
+        self.voice_status_lbl.pack(padx=6, pady=(1, 4))
+
+        # 2. Text Input Field
+        text_box = tk.Frame(self.reverse_ctrl_frame, bg=THEME["bg_card"], bd=1, relief="solid")
+        text_box.pack(fill=tk.X, padx=8, pady=(2, 4))
+
+        tk.Label(text_box, text="✍️ WRITE / TYPE ENGLISH TEXT", font=("Segoe UI", 8, "bold"), fg=THEME["cyan"], bg=THEME["bg_card"]).pack(anchor=tk.W, padx=6, pady=(3, 1))
+
+        text_input_row = tk.Frame(text_box, bg=THEME["bg_card"])
+        text_input_row.pack(fill=tk.X, padx=6, pady=3)
+
+        self.rev_input_entry = tk.Entry(
+            text_input_row,
+            font=("Consolas", 11, "bold"),
+            bg="#080C14",
+            fg=THEME["text_white"],
+            insertbackground=THEME["cyan"],
+            relief="flat",
+            bd=3
+        )
+        self.rev_input_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 4))
+        self.rev_input_entry.bind("<Return>", lambda e: self.on_reverse_text_submit())
+
+        btn_show = tk.Button(
+            text_input_row,
+            text="🔍 Show",
+            font=("Segoe UI", 9, "bold"),
+            bg=THEME["indigo"],
+            fg="#ffffff",
+            activebackground="#818cf8",
+            relief="flat",
+            bd=0,
+            padx=8,
+            pady=2,
+            cursor="hand2",
+            command=self.on_reverse_text_submit
+        )
+        btn_show.pack(side=tk.RIGHT)
+
+        # 3. Quick Selector Keypad
+        keypad_box = tk.Frame(self.reverse_ctrl_frame, bg=THEME["bg_card"], bd=1, relief="solid")
+        keypad_box.pack(fill=tk.X, padx=8, pady=(2, 4))
+
+        tk.Label(keypad_box, text="⚡ QUICK SELECTOR (TAP ANY SIGN)", font=("Segoe UI", 8, "bold"), fg=THEME["text_muted"], bg=THEME["bg_card"]).pack(anchor=tk.W, padx=6, pady=(3, 1))
+
+        grid_frame = tk.Frame(keypad_box, bg=THEME["bg_card"])
+        grid_frame.pack(fill=tk.X, padx=4, pady=2)
+
+        for i, char in enumerate("ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
+            r = i // 7
+            c = i % 7
+            btn = tk.Button(
+                grid_frame,
+                text=char,
+                font=("Consolas", 8, "bold"),
+                bg=THEME["bg_inner"],
+                fg=THEME["text_white"],
+                activebackground=THEME["cyan"],
+                activeforeground="#000000",
+                relief="flat",
+                bd=0,
+                padx=1,
+                pady=1,
+                width=3,
+                cursor="hand2",
+                command=lambda ch=char: self.on_quick_key_click(ch)
+            )
+            btn.grid(row=r, column=c, padx=1, pady=1)
+
+        digits_row = tk.Frame(keypad_box, bg=THEME["bg_card"])
+        digits_row.pack(fill=tk.X, padx=4, pady=(2, 4))
+        for num in "123456789":
+            btn = tk.Button(
+                digits_row,
+                text=num,
+                font=("Consolas", 8, "bold"),
+                bg=THEME["bg_inner"],
+                fg=THEME["amber"],
+                activebackground=THEME["amber"],
+                activeforeground="#000000",
+                relief="flat",
+                bd=0,
+                padx=1,
+                pady=1,
+                width=2,
+                cursor="hand2",
+                command=lambda n=num: self.on_quick_key_click(n)
+            )
+            btn.pack(side=tk.LEFT, expand=True, padx=1)
+
+        # 4. Audio Feedback Toggle Checkbutton
+        chk_row = tk.Frame(self.reverse_ctrl_frame, bg=THEME["bg_inner"])
+        chk_row.pack(fill=tk.X, padx=8, pady=(2, 4))
+        self.auto_speak_chk = ttk.Checkbutton(
+            chk_row,
+            text="🔊 Auto-Pronounce Sign (TTS)",
+            variable=self.reverse_auto_speech
+        )
+        self.auto_speak_chk.pack(anchor=tk.W)
+
         # 4. Settings & Gating Parameters
-        param_card = tk.Frame(right_col, bg=THEME["bg_inner"], bd=1, relief="solid")
-        param_card.pack(fill=tk.X, padx=12, pady=(0, 8))
+        self.param_card = tk.Frame(right_col, bg=THEME["bg_inner"], bd=1, relief="solid")
+        self.param_card.pack(fill=tk.X, padx=12, pady=(0, 8))
 
-        tk.Label(param_card, text="DETECTION TUNING", font=("Segoe UI", 9, "bold"), fg=THEME["text_muted"], bg=THEME["bg_inner"]).pack(pady=(8, 4))
+        tk.Label(self.param_card, text="DETECTION TUNING", font=("Segoe UI", 9, "bold"), fg=THEME["text_muted"], bg=THEME["bg_inner"]).pack(pady=(8, 4))
 
-        thresh_row = tk.Frame(param_card, bg=THEME["bg_inner"])
+        thresh_row = tk.Frame(self.param_card, bg=THEME["bg_inner"])
         thresh_row.pack(fill=tk.X, padx=12, pady=2)
-        self.thresh_lbl = tk.Label(thresh_row, text="Confidence Gate: 55%", font=("Segoe UI", 8), fg=THEME["text_white"], bg=THEME["bg_inner"])
+        self.thresh_lbl = tk.Label(thresh_row, text="Confidence Gate: 50%", font=("Segoe UI", 8), fg=THEME["text_white"], bg=THEME["bg_inner"])
         self.thresh_lbl.pack(side=tk.LEFT)
 
-        self.thresh_slider = ttk.Scale(param_card, from_=35, to=95, value=55, command=self.on_thresh_change)
+        self.thresh_slider = ttk.Scale(self.param_card, from_=25, to=90, value=50, command=self.on_thresh_change)
         self.thresh_slider.pack(fill=tk.X, padx=12, pady=(0, 6))
 
-        hold_row = tk.Frame(param_card, bg=THEME["bg_inner"])
+        hold_row = tk.Frame(self.param_card, bg=THEME["bg_inner"])
         hold_row.pack(fill=tk.X, padx=12, pady=2)
-        self.hold_dur_lbl = tk.Label(hold_row, text="Hold Duration: 1.0s", font=("Segoe UI", 8), fg=THEME["text_white"], bg=THEME["bg_inner"])
+        self.hold_dur_lbl = tk.Label(hold_row, text="Hold Duration: 0.5s", font=("Segoe UI", 8), fg=THEME["text_white"], bg=THEME["bg_inner"])
         self.hold_dur_lbl.pack(side=tk.LEFT)
 
-        self.hold_slider = ttk.Scale(param_card, from_=5, to=25, value=10, command=self.on_hold_dur_change)
+        self.hold_slider = ttk.Scale(self.param_card, from_=2, to=20, value=5, command=self.on_hold_dur_change)
         self.hold_slider.pack(fill=tk.X, padx=12, pady=(0, 6))
 
         # Tracking Mode Toggle
-        mode_row = tk.Frame(param_card, bg=THEME["bg_inner"])
+        mode_row = tk.Frame(self.param_card, bg=THEME["bg_inner"])
         mode_row.pack(fill=tk.X, padx=12, pady=(2, 8))
         self.mode_var = tk.StringVar(value="dynamic")
         ttk.Radiobutton(mode_row, text="MediaPipe Auto", variable=self.mode_var, value="dynamic", command=self.on_tracking_mode_change).pack(side=tk.LEFT)
@@ -660,10 +939,12 @@ class ISLMultiModalApp:
                 self.engine = ISLInferenceEngine(
                     model_path=model_path,
                     class_mapping_path=map_path,
-                    confidence_threshold=0.55,
+                    confidence_threshold=0.50,
                     smoothing_window=5,
-                    stability_duration=1.0,
-                    margin_scale=1.15
+                    stability_duration=0.5,
+                    margin_scale=1.15,
+                    adaptive_canny=True,
+                    use_ensemble=True
                 )
                 self.model_description = model_desc
                 self.root.after(0, self.on_engine_ready)
@@ -1139,6 +1420,178 @@ class ISLMultiModalApp:
             self.root.clipboard_append(text)
             self.status_msg_lbl.configure(text=f"Copied '{text}' to clipboard!")
 
+    # ----------------- REVERSE TRANSLATION (SPEECH & TEXT TO SIGN) -----------------
+    def start_voice_recognition(self):
+        """Spawns background worker thread to listen to user speech and transcribe."""
+        if hasattr(self, "reverse_translator") and self.reverse_translator.is_listening:
+            return
+
+        self.btn_voice_input.configure(bg=THEME["amber"], text="🎙️ Listening...", state="disabled")
+        self.voice_status_lbl.configure(text="Listening to microphone... Speak a letter or word.", fg=THEME["cyan"])
+
+        def _voice_worker():
+            def _progress(msg):
+                self.root.after(0, lambda: self.voice_status_lbl.configure(text=msg))
+
+            success, result_text = self.reverse_translator.listen_and_transcribe(status_callback=_progress)
+
+            def _on_finish():
+                self.btn_voice_input.configure(bg=THEME["cyan"], text="🎙️ Speak Letter / Word", state="normal")
+                if success:
+                    clean = result_text.strip().upper()
+                    # Clean up phrases like "LETTER A" or "THE LETTER B"
+                    if clean.startswith("LETTER ") and len(clean.split()) == 2:
+                        clean = clean.split()[1]
+                    self.rev_input_entry.delete(0, tk.END)
+                    self.rev_input_entry.insert(0, clean)
+                    self.voice_status_lbl.configure(text=f"Heard: '{clean}'", fg=THEME["emerald"])
+                    self.translate_text_to_signs(clean)
+                else:
+                    self.voice_status_lbl.configure(text=f"Notice: {result_text}", fg=THEME["amber"])
+
+            self.root.after(0, _on_finish)
+
+        threading.Thread(target=_voice_worker, daemon=True).start()
+
+    def on_reverse_text_submit(self):
+        text = self.rev_input_entry.get().strip().upper()
+        if not text:
+            text = self.text_entry.get().strip().upper()
+        if not text:
+            self.voice_status_lbl.configure(text="Please type or speak a letter (A-Z) or word first.", fg=THEME["amber"])
+            return
+        self.translate_text_to_signs(text)
+
+    def on_main_text_submit(self):
+        text = self.text_entry.get().strip().upper()
+        if not text:
+            self.status_msg_lbl.configure(text="Please type a letter (A-Z) or word first.", fg=THEME["amber"])
+            return
+        if hasattr(self, "rev_input_entry"):
+            self.rev_input_entry.delete(0, tk.END)
+            self.rev_input_entry.insert(0, text)
+        self.translate_text_to_signs(text)
+
+    def on_quick_key_click(self, char: str):
+        self.rev_input_entry.delete(0, tk.END)
+        self.rev_input_entry.insert(0, char)
+        self.translate_text_to_signs(char)
+
+    def translate_text_to_signs(self, text: str):
+        """Translates the input text into a sequence of ISL signs and shows the first."""
+        self.stop_reverse_animation()
+        self.reverse_sequence = self.reverse_translator.text_to_sign_sequence(text)
+        if not self.reverse_sequence:
+            self.status_msg_lbl.configure(text="No valid signs found for input.", fg=THEME["amber"])
+            return
+
+        # Mirror in spelled text entry
+        self.text_entry.delete(0, tk.END)
+        self.text_entry.insert(0, text)
+
+        self.reverse_idx = 0
+        self.show_reverse_sign_at_index(0)
+
+        # TTS Pronunciation
+        if self.reverse_auto_speech.get():
+            if len(text) == 1:
+                self.reverse_translator.speak_async(f"Sign {text}")
+            else:
+                self.reverse_translator.speak_async(text)
+
+    def show_reverse_sign_at_index(self, idx: int):
+        if not self.reverse_sequence:
+            return
+        idx = max(0, min(idx, len(self.reverse_sequence) - 1))
+        self.reverse_idx = idx
+
+        symbol, path, desc = self.reverse_sequence[idx]
+        seq_text = f"Sign {idx + 1} of {len(self.reverse_sequence)}"
+        card_bgr, pip_64 = self.reverse_translator.create_sign_display_card(
+            symbol=symbol,
+            sequence_info=seq_text
+        )
+
+        self.last_annotated = card_bgr
+        self.last_prep = pip_64
+        self.render_canvas(card_bgr)
+        self.render_pip(pip_64)
+
+        # Update telemetry badges
+        self.pred_badge_lbl.configure(text=f"Sign '{symbol}'", fg=THEME["cyan"])
+        self.conf_badge_lbl.configure(text="Reference Standard: 100%", fg=THEME["emerald"])
+        self.hand_mode_lbl.configure(text=f"{desc[:36]}..." if len(desc) > 36 else desc)
+        self.top3_lbl.configure(text=f"Target: '{symbol}' ({seq_text})")
+        self.reverse_step_lbl.configure(text=f"{seq_text}  ('{symbol}')")
+        self.status_msg_lbl.configure(text=f"Showing ISL Sign '{symbol}': {desc}", fg=THEME["text_white"])
+
+    def prev_reverse_sign(self):
+        if self.reverse_sequence and self.reverse_idx > 0:
+            self.stop_reverse_animation()
+            self.show_reverse_sign_at_index(self.reverse_idx - 1)
+
+    def next_reverse_sign(self):
+        if self.reverse_sequence and self.reverse_idx < len(self.reverse_sequence) - 1:
+            self.stop_reverse_animation()
+            self.show_reverse_sign_at_index(self.reverse_idx + 1)
+
+    def toggle_reverse_animation(self):
+        if self.reverse_is_playing:
+            self.stop_reverse_animation()
+        else:
+            if not self.reverse_sequence:
+                text = self.rev_input_entry.get().strip().upper()
+                if text:
+                    self.translate_text_to_signs(text)
+                else:
+                    return
+
+            if self.reverse_idx >= len(self.reverse_sequence) - 1:
+                self.reverse_idx = 0
+                self.show_reverse_sign_at_index(0)
+
+            self.reverse_is_playing = True
+            self.btn_rev_play.configure(text="⏸ Pause", style="Indigo.TButton")
+            self._schedule_next_reverse_frame()
+
+    def _schedule_next_reverse_frame(self):
+        if not self.reverse_is_playing:
+            return
+        self.reverse_anim_job = self.root.after(self.reverse_speed_ms, self._step_reverse_animation)
+
+    def _step_reverse_animation(self):
+        if not self.reverse_is_playing:
+            return
+
+        if self.reverse_idx < len(self.reverse_sequence) - 1:
+            self.reverse_idx += 1
+            self.show_reverse_sign_at_index(self.reverse_idx)
+            sym = self.reverse_sequence[self.reverse_idx][0]
+            if self.reverse_auto_speech.get() and sym != "SPACE":
+                self.reverse_translator.speak_async(sym)
+            self._schedule_next_reverse_frame()
+        else:
+            self.stop_reverse_animation()
+
+    def stop_reverse_animation(self):
+        self.reverse_is_playing = False
+        if self.reverse_anim_job:
+            self.root.after_cancel(self.reverse_anim_job)
+            self.reverse_anim_job = None
+        self.btn_rev_play.configure(text="▶ Play Fingerspelling", style="Success.TButton")
+
+    def pronounce_current_sign(self):
+        if self.reverse_sequence:
+            sym = self.reverse_sequence[self.reverse_idx][0]
+            if sym == "SPACE":
+                self.reverse_translator.speak_async("Space")
+            else:
+                self.reverse_translator.speak_async(f"Letter {sym}")
+        else:
+            text = self.rev_input_entry.get().strip()
+            if text:
+                self.reverse_translator.speak_async(text)
+
     # ----------------- SNAPSHOT & EXPORT -----------------
     def capture_full_window(self):
         self.root.update_idletasks()
@@ -1243,6 +1696,8 @@ class ISLMultiModalApp:
     def on_close(self):
         self.is_webcam_running = False
         self.is_video_playing = False
+        if hasattr(self, "reverse_is_playing") and self.reverse_is_playing:
+            self.stop_reverse_animation()
         if self.cap:
             self.cap.release()
         if self.video_cap:

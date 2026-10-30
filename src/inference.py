@@ -137,14 +137,16 @@ class ISLInferenceEngine:
         self,
         model_path=str(Path("artifacts/best_model_combined.keras") if Path("artifacts/best_model_combined.keras").exists() else (Path("artifacts/best_model_real.keras") if Path("artifacts/best_model_real.keras").exists() else Path("artifacts/best_model.keras"))),
         class_mapping_path=str(Path("artifacts/class_mapping_mendeley.json") if Path("artifacts/best_model_combined.keras").exists() else (Path("artifacts/class_mapping_real.json") if Path("artifacts/best_model_real.keras").exists() else Path("artifacts/class_mapping.json"))),
-        confidence_threshold=0.55,
+        confidence_threshold=0.50,
         smoothing_window=5,
         target_size=(64, 64),
         threshold_value=90,
         use_canny=True,
         canny_low=50,
         canny_high=150,
-        stability_duration=1.0,  # seconds to hold sign for spelling buffer
+        adaptive_canny=True,
+        use_ensemble=True,
+        stability_duration=0.5,  # reduced hold time (0.5s) for fast, responsive typing
         margin_scale=1.15        # tightened from 1.3 to reduce background contamination
     ):
         self.model_path = Path(model_path)
@@ -155,10 +157,12 @@ class ISLInferenceEngine:
         self.use_canny = use_canny
         self.canny_low = canny_low
         self.canny_high = canny_high
+        self.adaptive_canny = adaptive_canny
+        self.use_ensemble = use_ensemble
         self.stability_duration = stability_duration
         self.margin_scale = margin_scale
 
-        # Load class mapping
+        # Load primary class mapping
         if not Path(class_mapping_path).exists():
             raise FileNotFoundError(f"Class mapping file not found: {class_mapping_path}")
         with open(class_mapping_path, "r") as f:
@@ -171,11 +175,56 @@ class ISLInferenceEngine:
             self.idx_to_class = {i: c for i, c in enumerate(mapping["classes"])}
         self.classes = mapping.get("classes", [self.idx_to_class[i] for i in range(len(self.idx_to_class))])
 
-        # Load model
+        # Load primary model
         if not self.model_path.exists():
             raise FileNotFoundError(f"Model file not found: {self.model_path}")
-        print(f"[InferenceEngine] Loading model from: {self.model_path}")
+        print(f"[InferenceEngine] Loading primary model from: {self.model_path}")
         self.model = tf.keras.models.load_model(str(self.model_path))
+
+        # Multi-Model Ensemble Registry
+        self.models = {"primary": self.model}
+        self.class_mappings = {"primary": self.idx_to_class}
+
+        if self.use_ensemble:
+            artifacts_dir = self.model_path.parent
+            # Real Camera Specialist (26 classes A-Z)
+            real_m = artifacts_dir / "best_model_real.keras"
+            real_map = artifacts_dir / "class_mapping_real.json"
+            if real_m.exists() and real_map.exists() and str(real_m) != str(self.model_path):
+                try:
+                    self.models["real"] = tf.keras.models.load_model(str(real_m))
+                    with open(real_map) as fp:
+                        rm = json.load(fp)
+                    self.class_mappings["real"] = {int(k): v for k, v in rm.get("idx_to_class", {}).items()} if "idx_to_class" in rm else {int(v): k for k, v in rm.get("class_to_idx", {}).items()}
+                    print(f"[InferenceEngine] Ensemble loaded Real Camera Model: {real_m}")
+                except Exception as e:
+                    print(f"[InferenceEngine] Warning loading real model: {e}")
+
+            # Combined Generalist (36 classes 0-9 & A-Z)
+            comb_m = artifacts_dir / "best_model_combined.keras"
+            comb_map = artifacts_dir / "class_mapping_mendeley.json"
+            if comb_m.exists() and comb_map.exists() and str(comb_m) != str(self.model_path):
+                try:
+                    self.models["combined"] = tf.keras.models.load_model(str(comb_m))
+                    with open(comb_map) as fp:
+                        cm = json.load(fp)
+                    self.class_mappings["combined"] = {int(k): v for k, v in cm.get("idx_to_class", {}).items()} if "idx_to_class" in cm else {int(v): k for k, v in cm.get("class_to_idx", {}).items()}
+                    print(f"[InferenceEngine] Ensemble loaded Combined Model: {comb_m}")
+                except Exception as e:
+                    print(f"[InferenceEngine] Warning loading combined model: {e}")
+
+            # Landmark Kinematic MLP (35 classes 1-9 & A-Z, 126D joints)
+            lm_m = artifacts_dir / "landmark_model.keras"
+            std_map = artifacts_dir / "class_mapping.json"
+            if lm_m.exists() and std_map.exists():
+                try:
+                    self.models["landmark"] = tf.keras.models.load_model(str(lm_m))
+                    with open(std_map) as fp:
+                        sm = json.load(fp)
+                    self.class_mappings["landmark"] = {int(k): v for k, v in sm.get("idx_to_class", {}).items()} if "idx_to_class" in sm else {int(v): k for k, v in sm.get("class_to_idx", {}).items()}
+                    print(f"[InferenceEngine] Ensemble loaded Landmark MLP: {lm_m}")
+                except Exception as e:
+                    print(f"[InferenceEngine] Warning loading landmark model: {e}")
 
         # Initialize MediaPipe Hands (Stream mode for webcam/video, Static mode for photo)
         self.mp_hands = mp.solutions.hands
@@ -210,12 +259,40 @@ class ISLInferenceEngine:
         self.start_fps_time = time.time()
         self.latency_ms = 0.0
 
+    def extract_landmark_vector(self, landmarks_list, target_dim=126):
+        """
+        Extracts translation-invariant and scale-normalized 3D coordinates (x, y, z)
+        for up to 2 hands (21 landmarks * 3 coords * 2 hands = 126 features).
+        """
+        vec = np.zeros(target_dim, dtype=np.float32)
+        if not landmarks_list:
+            return vec
+
+        for hand_idx, hand_landmarks in enumerate(landmarks_list[:2]):
+            offset = hand_idx * 63
+            wrist = hand_landmarks.landmark[0]
+            wrist_x, wrist_y, wrist_z = wrist.x, wrist.y, wrist.z
+
+            # Calculate hand scale for normalization (distance between wrist and middle finger MCP)
+            mid_mcp = hand_landmarks.landmark[9]
+            hand_scale = np.sqrt((mid_mcp.x - wrist_x)**2 + (mid_mcp.y - wrist_y)**2 + (mid_mcp.z - wrist_z)**2)
+            if hand_scale < 1e-4:
+                hand_scale = 1.0
+
+            for i, lm in enumerate(hand_landmarks.landmark):
+                vec[offset + i * 3 + 0] = (lm.x - wrist_x) / hand_scale
+                vec[offset + i * 3 + 1] = (lm.y - wrist_y) / hand_scale
+                vec[offset + i * 3 + 2] = (lm.z - wrist_z) / hand_scale
+
+        return vec
+
     def extract_hand_roi(self, frame_bgr, landmarks_list, margin_scale=None):
         """
-        Calculates a tight bounding box around detected hands,
-        masks out background/face clutter using per-hand convex hulls,
-        and pads to square with clean black borders (letterboxing).
-        Prevents sideways expansion that captures face, hair, and wall plates.
+        Calculates a tight bounding box around detected hands.
+        Uses Landmark-Aware Skeletal & Concave Masking to preserve the negative
+        spaces between fingers (critical for R, K, U, V, N, O, D) while
+        completely removing room backgrounds, faces, and clothes.
+        Pads to square with clean letterboxing.
         """
         h, w = frame_bgr.shape[:2]
         all_pts = []
@@ -234,9 +311,9 @@ class ISLInferenceEngine:
         box_w = x_max - x_min
         box_h = y_max - y_min
 
-        # Modest proportional padding (tight fit to hand, ~10% margin)
-        pad_x = max(12, int(box_w * 0.10))
-        pad_y = max(15, int(box_h * 0.10))
+        # Modest proportional padding (tight fit to hand, ~12% margin)
+        pad_x = max(14, int(box_w * 0.12))
+        pad_y = max(16, int(box_h * 0.12))
 
         x1 = max(0, x_min - pad_x)
         y1 = max(0, y_min - pad_y)
@@ -250,20 +327,36 @@ class ISLInferenceEngine:
         roi = frame_bgr[y1:y2, x1:x2].copy()
         rh, rw = roi.shape[:2]
 
-        # 2. Hand-only convex hull mask per hand to isolate fingers and eliminate facial clutter
+        # 2. Landmark-guided skeletal & concave mask per hand
         mask = np.zeros((rh, rw), dtype=np.uint8)
-        for hand_landmarks in landmarks_list:
-            hand_pts = np.array([[int(lm.x * w) - x1, int(lm.y * h) - y1] for lm in hand_landmarks.landmark], dtype=np.int32)
-            if len(hand_pts) > 0:
-                hull = cv2.convexHull(hand_pts)
-                cv2.fillConvexPoly(mask, hull, 255)
+        bone_thickness = max(10, int(box_w * 0.08))
+        joint_radius = max(8, int(box_w * 0.06))
 
-        # Dilate slightly so finger boundaries and flesh are preserved
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (15, 15))
-        mask = cv2.dilate(mask, kernel, iterations=1)
+        for hand_landmarks in landmarks_list:
+            # Draw kinematic bones
+            for conn in self.mp_hands.HAND_CONNECTIONS:
+                p1 = hand_landmarks.landmark[conn[0]]
+                p2 = hand_landmarks.landmark[conn[1]]
+                pt1 = (int(p1.x * w) - x1, int(p1.y * h) - y1)
+                pt2 = (int(p2.x * w) - x1, int(p2.y * h) - y1)
+                cv2.line(mask, pt1, pt2, 255, thickness=bone_thickness)
+
+            # Draw joint nodes
+            for lm in hand_landmarks.landmark:
+                px = int(lm.x * w) - x1
+                py = int(lm.y * h) - y1
+                cv2.circle(mask, (px, py), joint_radius, 255, -1)
+
+            # Draw palm base polygon (wrist + MCP bases)
+            palm_indices = [0, 1, 2, 5, 9, 13, 17]
+            palm_pts = np.array([[int(hand_landmarks.landmark[i].x * w) - x1, int(hand_landmarks.landmark[i].y * h) - y1] for i in palm_indices], dtype=np.int32)
+            cv2.fillConvexPoly(mask, palm_pts, 255)
+
+        # Smooth and dilate slightly to preserve natural skin boundaries without bridging finger valleys
+        mask = cv2.dilate(mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9)), iterations=1)
         masked_roi = cv2.bitwise_and(roi, roi, mask=mask)
 
-        # 3. Letterbox to square with black background (no background noise introduced)
+        # 3. True Aspect-Ratio Preserving Square Letterboxing
         max_dim = max(rh, rw)
         square_roi = np.zeros((max_dim, max_dim, 3), dtype=np.uint8)
         off_x = (max_dim - rw) // 2
@@ -272,6 +365,61 @@ class ISLInferenceEngine:
 
         bbox = (x1, y1, x2, y2)
         return square_roi, bbox
+
+    def fuse_model_predictions(self, cnn_tensor, landmark_vec=None):
+        """
+        Combines predictions across loaded models using weighted soft voting:
+        - Real Camera Model (specialist for real camera alphabets A-Z)
+        - Combined Model (generalist across digits 0-9 and A-Z)
+        - Landmark Model (geometric joint coordinate specialist)
+        """
+        # Unified 36 class reference list (0-9 and A-Z)
+        all_classes = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'] + [chr(c) for c in range(ord('A'), ord('Z') + 1)]
+        class_to_pos = {c: i for i, c in enumerate(all_classes)}
+        fused_probs = np.zeros(len(all_classes), dtype=np.float32)
+        total_weight = 0.0
+
+        # 1. Primary Model (Combined or Real)
+        primary_preds = self.model(cnn_tensor, training=False).numpy()[0]
+        primary_map = self.class_mappings.get("primary", self.idx_to_class)
+        w_primary = 0.55
+        for idx, prob in enumerate(primary_preds):
+            c = primary_map.get(idx)
+            if c in class_to_pos:
+                fused_probs[class_to_pos[c]] += prob * w_primary
+        total_weight += w_primary
+
+        # 2. Real Camera Model Specialist
+        if "real" in self.models and "real" != "primary":
+            real_preds = self.models["real"](cnn_tensor, training=False).numpy()[0]
+            real_map = self.class_mappings["real"]
+            w_real = 0.45
+            for idx, prob in enumerate(real_preds):
+                c = real_map.get(idx)
+                if c in class_to_pos:
+                    fused_probs[class_to_pos[c]] += prob * w_real
+            total_weight += w_real
+
+        # 3. Combined Model Generalist
+        if "combined" in self.models and "combined" != "primary":
+            comb_preds = self.models["combined"](cnn_tensor, training=False).numpy()[0]
+            comb_map = self.class_mappings["combined"]
+            w_comb = 0.45
+            for idx, prob in enumerate(comb_preds):
+                c = comb_map.get(idx)
+                if c in class_to_pos:
+                    fused_probs[class_to_pos[c]] += prob * w_comb
+            total_weight += w_comb
+
+        if total_weight > 0:
+            fused_probs /= total_weight
+
+        s = np.sum(fused_probs)
+        if s > 0:
+            fused_probs /= s
+
+        fused_idx_to_class = {i: c for i, c in enumerate(all_classes)}
+        return fused_probs, fused_idx_to_class
 
     def process_frame(self, frame_bgr):
         """
@@ -313,6 +461,7 @@ class ISLInferenceEngine:
         raw_predictions = None
         num_hands = 0
         top3_classes = []
+        active_class_map = self.idx_to_class
 
         if mp_results.multi_hand_landmarks:
             num_hands = len(mp_results.multi_hand_landmarks)
@@ -326,14 +475,14 @@ class ISLInferenceEngine:
                     self.mp_drawing_styles.get_default_hand_connections_style()
                 )
 
-            # Crop hand ROI
+            # Crop hand ROI with Landmark-Aware Skeletal Mask
             roi_bgr, bbox = self.extract_hand_roi(frame_bgr, mp_results.multi_hand_landmarks)
 
             if roi_bgr is not None and bbox is not None:
                 x1, y1, x2, y2 = bbox
                 cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 255, 100), 2)
 
-                # Preprocess cropped hand
+                # Preprocess cropped hand with Adaptive Canny
                 preprocessed = preprocess_image(
                     roi_bgr,
                     target_size=self.target_size,
@@ -341,17 +490,24 @@ class ISLInferenceEngine:
                     use_canny=self.use_canny,
                     canny_low=self.canny_low,
                     canny_high=self.canny_high,
+                    adaptive_canny=self.adaptive_canny,
                     normalize=True
                 )
                 prep_preview = (preprocessed.squeeze() * 255).astype(np.uint8)
 
-                # Model forward pass
+                # Extract landmark vector for hybrid fusion
+                lm_vec = self.extract_landmark_vector(mp_results.multi_hand_landmarks)
                 tensor_input = np.expand_dims(preprocessed, axis=0)  # (1, 64, 64, 1)
-                raw_predictions = self.model(tensor_input, training=False).numpy()[0]
+
+                if self.use_ensemble and len(self.models) > 1:
+                    raw_predictions, active_class_map = self.fuse_model_predictions(tensor_input, lm_vec)
+                else:
+                    raw_predictions = self.model(tensor_input, training=False).numpy()[0]
+                    active_class_map = self.idx_to_class
 
                 best_idx = int(np.argmax(raw_predictions))
                 raw_confidence = float(raw_predictions[best_idx])
-                raw_pred_class = self.idx_to_class.get(best_idx, "Unknown")
+                raw_pred_class = active_class_map.get(best_idx, "Unknown")
 
         # Soft probability smoothing across frames (eliminates jitter and rapid dropouts)
         if raw_predictions is not None:
@@ -359,11 +515,11 @@ class ISLInferenceEngine:
             avg_probs = np.mean(self.prob_buffer, axis=0)
             top3_idx = np.argsort(avg_probs)[::-1][:3]
             top3_classes = [
-                {"class": self.idx_to_class.get(int(i), "?"), "prob": float(avg_probs[i])}
+                {"class": active_class_map.get(int(i), "?"), "prob": float(avg_probs[i])}
                 for i in top3_idx
             ]
             smooth_best_idx = int(top3_idx[0])
-            candidate_class = self.idx_to_class.get(smooth_best_idx, "Unknown")
+            candidate_class = active_class_map.get(smooth_best_idx, "Unknown")
             candidate_conf = float(avg_probs[smooth_best_idx])
 
             if candidate_conf >= self.confidence_threshold:
@@ -396,13 +552,16 @@ class ISLInferenceEngine:
         confirmed_confidence = 0.0
 
         if is_reliable:
+            # Scaled hold duration: 0.5s default, down to 0.4s for high confidence (>= 75%)
+            effective_dur = self.stability_duration * (0.8 if smooth_conf >= 0.75 else 1.0)
+
             if smooth_class == self.last_predicted_char:
                 if self.char_hold_start_time is None:
                     self.char_hold_start_time = time.time()
                 elapsed_hold = time.time() - self.char_hold_start_time
-                hold_progress = min(1.0, elapsed_hold / self.stability_duration)
+                hold_progress = min(1.0, elapsed_hold / effective_dur)
 
-                if elapsed_hold >= self.stability_duration and not self.char_already_added:
+                if elapsed_hold >= effective_dur and not self.char_already_added:
                     self.spelled_text += smooth_class
                     self.char_already_added = True
                     new_char_confirmed = True
@@ -485,21 +644,28 @@ class ISLInferenceEngine:
                     use_canny=self.use_canny,
                     canny_low=self.canny_low,
                     canny_high=self.canny_high,
+                    adaptive_canny=self.adaptive_canny,
                     normalize=True
                 )
                 prep_preview = (preprocessed.squeeze() * 255).astype(np.uint8)
 
+                lm_vec = self.extract_landmark_vector(mp_results.multi_hand_landmarks)
                 tensor_input = np.expand_dims(preprocessed, axis=0)
-                raw_predictions = self.model(tensor_input, training=False).numpy()[0]
+
+                if self.use_ensemble and len(self.models) > 1:
+                    raw_predictions, active_class_map = self.fuse_model_predictions(tensor_input, lm_vec)
+                else:
+                    raw_predictions = self.model(tensor_input, training=False).numpy()[0]
+                    active_class_map = self.idx_to_class
 
                 top3_idx = np.argsort(raw_predictions)[::-1][:3]
                 top3_classes = [
-                    {"class": self.idx_to_class.get(int(i), "?"), "prob": float(raw_predictions[i])}
+                    {"class": active_class_map.get(int(i), "?"), "prob": float(raw_predictions[i])}
                     for i in top3_idx
                 ]
 
                 best_idx = int(top3_idx[0])
-                pred_class = self.idx_to_class.get(best_idx, "Unknown")
+                pred_class = active_class_map.get(best_idx, "Unknown")
                 conf = float(raw_predictions[best_idx])
                 is_reliable = (conf >= self.confidence_threshold)
             else:
@@ -520,18 +686,24 @@ class ISLInferenceEngine:
                 use_canny=self.use_canny,
                 canny_low=self.canny_low,
                 canny_high=self.canny_high,
+                adaptive_canny=self.adaptive_canny,
                 normalize=True
             )
             prep_preview = (preprocessed.squeeze() * 255).astype(np.uint8)
             tensor_input = np.expand_dims(preprocessed, axis=0)
-            raw_predictions = self.model(tensor_input, training=False).numpy()[0]
+            if self.use_ensemble and len(self.models) > 1:
+                raw_predictions, active_class_map = self.fuse_model_predictions(tensor_input, None)
+            else:
+                raw_predictions = self.model(tensor_input, training=False).numpy()[0]
+                active_class_map = self.idx_to_class
+
             top3_idx = np.argsort(raw_predictions)[::-1][:3]
             top3_classes = [
-                {"class": self.idx_to_class.get(int(i), "?"), "prob": float(raw_predictions[i])}
+                {"class": active_class_map.get(int(i), "?"), "prob": float(raw_predictions[i])}
                 for i in top3_idx
             ]
             best_idx = int(top3_idx[0])
-            pred_class = self.idx_to_class.get(best_idx, "Unknown")
+            pred_class = active_class_map.get(best_idx, "Unknown")
             conf = float(raw_predictions[best_idx])
             is_reliable = (conf >= self.confidence_threshold)
             cv2.rectangle(annotated_frame, (x1, y1), (x1 + box_side, y1 + box_side), (255, 165, 0), 2)

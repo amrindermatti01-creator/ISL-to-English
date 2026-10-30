@@ -32,11 +32,12 @@ training:
   test_split: 0.1
 
 inference:
-  confidence_threshold: 0.70
+  confidence_threshold: 0.50
   smoothing_frames: 5
+  stability_duration: 0.50 # seconds required to commit sign into sentence buffer
   no_sign_label: "No reliable sign detected"
   camera_index: 0
-  roi_scale_factor: 1.2 # expansion around MediaPipe hand bounding box
+  roi_scale_factor: 1.15 # expansion around MediaPipe hand bounding box
 
 artifacts:
   model_dir: "artifacts"

@@ -20,6 +20,28 @@ def load_config(config_path="config.yaml"):
     with open(config_path, "r") as f:
         return yaml.safe_load(f)
 
+def auto_canny(image, sigma=0.33, min_val=20, max_val=200):
+    """
+    Computes optimal, luminance-adaptive Canny edge thresholds based on
+    the median pixel intensity of the hand image.
+    Prevents edge starvation in dim lighting and edge flooding under bright lighting.
+    """
+    # Exclude black background pixels (value 0) when computing median of masked hands
+    nonzero_pixels = image[image > 0]
+    if len(nonzero_pixels) > 50:
+        v = np.median(nonzero_pixels)
+    else:
+        v = np.median(image)
+
+    lower = int(max(min_val, (1.0 - sigma) * v))
+    upper = int(min(max_val, (1.0 + sigma) * v))
+
+    # Ensure valid gradient spread
+    if lower >= upper:
+        lower = max(min_val, upper - 30)
+
+    return cv2.Canny(image, lower, upper)
+
 def preprocess_image(
     image_input,
     target_size=(64, 64),
@@ -27,6 +49,7 @@ def preprocess_image(
     use_canny=True,
     canny_low=50,
     canny_high=150,
+    adaptive_canny=True,
     normalize=True
 ):
     """
@@ -38,8 +61,9 @@ def preprocess_image(
         target_size: Tuple (width, height), default (64, 64).
         threshold_value: Binary threshold cutoff T=90 (Paper Section 3.2.2).
         use_canny: Whether to apply Canny edge detection (Paper Section 3.2.3).
-        canny_low: Lower gradient threshold for Canny.
-        canny_high: Upper gradient threshold for Canny.
+        canny_low: Lower gradient threshold for Canny (used when adaptive_canny=False).
+        canny_high: Upper gradient threshold for Canny (used when adaptive_canny=False).
+        adaptive_canny: If True, dynamically tunes Canny thresholds based on local hand luminance.
         normalize: If True, scales pixel values to range [0.0, 1.0].
 
     Returns:
@@ -72,8 +96,10 @@ def preprocess_image(
 
     # 4. Feature extraction: Binary thresholding & Canny edge detection
     if use_canny:
-        # Canny edge detection highlighting hand boundary contours
-        processed = cv2.Canny(blurred, canny_low, canny_high)
+        if adaptive_canny:
+            processed = auto_canny(blurred)
+        else:
+            processed = cv2.Canny(blurred, canny_low, canny_high)
     elif threshold_value is not None:
         # Binary thresholding with set cutoff T=90 (Equation 2 in Paper)
         _, processed = cv2.threshold(blurred, threshold_value, 255, cv2.THRESH_BINARY)

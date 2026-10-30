@@ -356,9 +356,9 @@ def main():
     parser.add_argument("--camera", type=int, default=0, help="Camera device index (default: 0)")
     parser.add_argument("--model", type=str, default=default_model, help="Path to trained model")
     parser.add_argument("--mapping", type=str, default=default_mapping, help="Path to class mapping")
-    parser.add_argument("--threshold", type=float, default=0.55, help="Confidence threshold (default: 0.55)")
+    parser.add_argument("--threshold", type=float, default=0.50, help="Confidence threshold (default: 0.50)")
     parser.add_argument("--window", type=int, default=5, help="Temporal smoothing window size (default: 5)")
-    parser.add_argument("--stability", type=float, default=1.0, help="Hold duration (seconds) to spell character")
+    parser.add_argument("--stability", type=float, default=0.50, help="Hold duration (seconds) to spell character (default: 0.50)")
     parser.add_argument("--margin", type=float, default=1.15, help="Hand bounding box margin scale (default: 1.15)")
     parser.add_argument("--auto-capture", dest="auto_capture", action="store_true", default=True, help="Auto-capture screenshot on recognized sign result (default: True)")
     parser.add_argument("--no-auto-capture", dest="auto_capture", action="store_false", help="Disable auto-capture on recognized sign result")
@@ -373,7 +373,9 @@ def main():
         confidence_threshold=args.threshold,
         smoothing_window=args.window,
         stability_duration=args.stability,
-        margin_scale=args.margin
+        margin_scale=args.margin,
+        adaptive_canny=True,
+        use_ensemble=True
     )
 
     # If benchmark requested, run and exit

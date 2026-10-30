@@ -40,6 +40,7 @@ def main():
     parser.add_argument("--epochs", type=int, default=15, help="Maximum training epochs")
     parser.add_argument("--batch-size", type=int, default=64, help="Training batch size")
     parser.add_argument("--lr", type=float, default=0.001, help="Initial Adam learning rate")
+    parser.add_argument("--resume", action="store_true", help="Resume training from previous checkpoint")
     args = parser.parse_args()
 
     processed_dir = PROJECT_ROOT / "data/processed"
@@ -125,18 +126,28 @@ def main():
     np.savez_compressed(comb_val_cache, x=x_val, y=y_val)
     print(f"  Cached combined datasets saved to: {comb_train_cache.name} & {comb_val_cache.name}")
 
-    # Build model (36 classes)
-    print(f"\nBuilding Compact CNN for {num_classes} classes...")
-    model = build_real_compact_cnn(input_shape=(64, 64, 1), num_classes=num_classes, learning_rate=args.lr)
-    model.summary()
-
-    train_ds = create_augmented_dataset(x_train, y_train, batch_size=args.batch_size, is_training=True)
-    val_ds = create_augmented_dataset(x_val, y_val, batch_size=args.batch_size, is_training=False)
-
     model_checkpoint_path = artifacts_dir / "best_model_combined.keras"
     history_csv_path = reports_dir / "combined_training_history.csv"
     training_curves_path = reports_dir / "combined_training_curves.png"
     config_path = artifacts_dir / "training_config_combined.json"
+
+    initial_epoch = 0
+    if args.resume and model_checkpoint_path.exists():
+        print(f"\n[RESUME] Loading existing checkpoint from: {model_checkpoint_path.name}")
+        model = tf.keras.models.load_model(str(model_checkpoint_path))
+        if history_csv_path.exists():
+            with open(history_csv_path, "r", encoding="utf-8") as f:
+                lines = [l.strip() for l in f if l.strip()]
+            initial_epoch = max(0, len(lines) - 1)
+            print(f"[RESUME] Resuming from epoch {initial_epoch + 1}/{args.epochs}")
+    else:
+        # Build model (36 classes)
+        print(f"\nBuilding Compact CNN for {num_classes} classes...")
+        model = build_real_compact_cnn(input_shape=(64, 64, 1), num_classes=num_classes, learning_rate=args.lr)
+    model.summary()
+
+    train_ds = create_augmented_dataset(x_train, y_train, batch_size=args.batch_size, is_training=True)
+    val_ds = create_augmented_dataset(x_val, y_val, batch_size=args.batch_size, is_training=False)
 
     callbacks = [
         ModelCheckpoint(
@@ -160,7 +171,7 @@ def main():
             min_lr=1e-5,
             verbose=1
         ),
-        CSVLogger(str(history_csv_path), separator=",", append=False)
+        CSVLogger(str(history_csv_path), separator=",", append=bool(args.resume and initial_epoch > 0))
     ]
 
     print("\nStarting combined training loop...")
@@ -169,6 +180,7 @@ def main():
         train_ds,
         validation_data=val_ds,
         epochs=args.epochs,
+        initial_epoch=initial_epoch,
         callbacks=callbacks
     )
     train_time = time.time() - t0
