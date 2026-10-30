@@ -237,28 +237,46 @@ class ReverseISLTranslator:
                 self.is_listening = False
 
     def speak_async(self, text: str):
-        """Asynchronously synthesizes speech using pyttsx3."""
-        if text.strip():
+        """Asynchronously synthesizes speech using SAPI/pyttsx3."""
+        if text and text.strip():
             self._tts_queue.put(text.strip())
 
     def _tts_worker(self):
         """Background daemon thread to process text-to-speech requests safely."""
+        use_sapi = False
+        sapi_voice = None
         try:
-            import pyttsx3
-            engine = pyttsx3.init()
-            engine.setProperty("rate", 160)
-            engine.setProperty("volume", 0.95)
+            import pythoncom
+            import win32com.client
+            pythoncom.CoInitialize()
+            sapi_voice = win32com.client.Dispatch("SAPI.SpVoice")
+            sapi_voice.Rate = 1
+            sapi_voice.Volume = 100
+            use_sapi = True
+            logger.info("Windows Native SAPI Voice initialized successfully for TTS.")
         except Exception as e:
-            logger.warning(f"pyttsx3 initialization failed in background worker: {e}")
-            return
+            logger.warning(f"SAPI voice initialization failed, attempting fallback: {e}")
+
+        engine = None
+        if not use_sapi:
+            try:
+                import pyttsx3
+                engine = pyttsx3.init()
+                engine.setProperty("rate", 160)
+                engine.setProperty("volume", 0.95)
+            except Exception as e:
+                logger.warning(f"pyttsx3 fallback initialization failed: {e}")
 
         while True:
             text = self._tts_queue.get()
             if text is None:
                 break
             try:
-                engine.say(text)
-                engine.runAndWait()
+                if use_sapi and sapi_voice is not None:
+                    sapi_voice.Speak(text, 0)
+                elif engine is not None:
+                    engine.say(text)
+                    engine.runAndWait()
             except Exception as e:
                 logger.error(f"TTS synthesis error: {e}")
             finally:

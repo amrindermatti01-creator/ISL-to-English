@@ -1526,30 +1526,61 @@ class ISLMultiModalApp:
         self.status_msg_lbl.configure(text=f"Showing ISL Sign '{symbol}': {desc}", fg=THEME["text_white"])
 
     def prev_reverse_sign(self):
-        if self.reverse_sequence and self.reverse_idx > 0:
+        """Steps to previous sign in sequence, or cycles backward through alphabet A-Z, 1-9."""
+        if self.reverse_sequence and len(self.reverse_sequence) > 1:
             self.stop_reverse_animation()
-            self.show_reverse_sign_at_index(self.reverse_idx - 1)
+            new_idx = (self.reverse_idx - 1) % len(self.reverse_sequence)
+            self.show_reverse_sign_at_index(new_idx)
+        else:
+            all_signs = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789")
+            curr_sym = self.reverse_sequence[0][0] if self.reverse_sequence else "A"
+            idx = all_signs.index(curr_sym) if curr_sym in all_signs else 0
+            prev_sym = all_signs[(idx - 1) % len(all_signs)]
+            self.text_entry.delete(0, tk.END)
+            self.text_entry.insert(0, prev_sym)
+            if hasattr(self, "rev_input_entry"):
+                self.rev_input_entry.delete(0, tk.END)
+                self.rev_input_entry.insert(0, prev_sym)
+            self.translate_text_to_signs(prev_sym)
 
     def next_reverse_sign(self):
-        if self.reverse_sequence and self.reverse_idx < len(self.reverse_sequence) - 1:
+        """Steps to next sign in sequence, or cycles forward through alphabet A-Z, 1-9."""
+        if self.reverse_sequence and len(self.reverse_sequence) > 1:
             self.stop_reverse_animation()
-            self.show_reverse_sign_at_index(self.reverse_idx + 1)
+            new_idx = (self.reverse_idx + 1) % len(self.reverse_sequence)
+            self.show_reverse_sign_at_index(new_idx)
+        else:
+            all_signs = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789")
+            curr_sym = self.reverse_sequence[0][0] if self.reverse_sequence else "A"
+            idx = all_signs.index(curr_sym) if curr_sym in all_signs else 0
+            next_sym = all_signs[(idx + 1) % len(all_signs)]
+            self.text_entry.delete(0, tk.END)
+            self.text_entry.insert(0, next_sym)
+            if hasattr(self, "rev_input_entry"):
+                self.rev_input_entry.delete(0, tk.END)
+                self.rev_input_entry.insert(0, next_sym)
+            self.translate_text_to_signs(next_sym)
 
     def toggle_reverse_animation(self):
+        """Plays or pauses sequential fingerspelling animation."""
         if self.reverse_is_playing:
             self.stop_reverse_animation()
         else:
-            if not self.reverse_sequence:
-                text = self.rev_input_entry.get().strip().upper()
-                if text:
-                    self.translate_text_to_signs(text)
-                else:
-                    return
+            curr_text = self.text_entry.get().strip().upper()
+            if curr_text and (not self.reverse_sequence or len(self.reverse_sequence) <= 1 and len(curr_text) > 1):
+                self.translate_text_to_signs(curr_text)
 
-            if self.reverse_idx >= len(self.reverse_sequence) - 1:
-                self.reverse_idx = 0
-                self.show_reverse_sign_at_index(0)
+            if not self.reverse_sequence or len(self.reverse_sequence) <= 1:
+                sym = self.reverse_sequence[0][0] if self.reverse_sequence else "A"
+                self.pronounce_current_sign()
+                self.status_msg_lbl.configure(
+                    text=f"Single sign '{sym}' displayed. Type a full word (e.g. HELLO, INDIA, NAMASTE) below to play fingerspelling animation!",
+                    fg=THEME["cyan"]
+                )
+                return
 
+            self.reverse_idx = 0
+            self.show_reverse_sign_at_index(0)
             self.reverse_is_playing = True
             self.btn_rev_play.configure(text="⏸ Pause", style="Indigo.TButton")
             self._schedule_next_reverse_frame()
@@ -1572,6 +1603,7 @@ class ISLMultiModalApp:
             self._schedule_next_reverse_frame()
         else:
             self.stop_reverse_animation()
+            self.status_msg_lbl.configure(text="Fingerspelling playback completed.", fg=THEME["emerald"])
 
     def stop_reverse_animation(self):
         self.reverse_is_playing = False
@@ -1581,16 +1613,23 @@ class ISLMultiModalApp:
         self.btn_rev_play.configure(text="▶ Play Fingerspelling", style="Success.TButton")
 
     def pronounce_current_sign(self):
-        if self.reverse_sequence:
+        """Speaks the active sign aloud via TTS with live UI confirmation."""
+        phrase = "Letter A"
+        if self.reverse_sequence and self.reverse_idx < len(self.reverse_sequence):
             sym = self.reverse_sequence[self.reverse_idx][0]
             if sym == "SPACE":
-                self.reverse_translator.speak_async("Space")
+                phrase = "Space"
+            elif sym.isdigit():
+                phrase = f"Number {sym}"
             else:
-                self.reverse_translator.speak_async(f"Letter {sym}")
+                phrase = f"Letter {sym}"
         else:
-            text = self.rev_input_entry.get().strip()
+            text = self.text_entry.get().strip()
             if text:
-                self.reverse_translator.speak_async(text)
+                phrase = text
+
+        self.status_msg_lbl.configure(text=f"[Audio] Speaking aloud: '{phrase}'", fg=THEME["cyan"])
+        self.reverse_translator.speak_async(phrase)
 
     # ----------------- SNAPSHOT & EXPORT -----------------
     def capture_full_window(self):
